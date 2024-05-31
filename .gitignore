@@ -84,6 +84,9 @@ celerybeat-schedule
 # Environments
 .env
 .venv
+deploy.bat
+deploy.sh
+startup.sh
 env/
 venv/
 ENV/
