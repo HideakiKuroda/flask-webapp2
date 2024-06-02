@@ -1,36 +1,31 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-    <script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
-    <title>Microsoft Identity Python Web App: Index</title>
-</head>
-<body>
-  {% for message in get_flashed_messages() %}
-  <div class="alert alert-warning alert-dismissible fade show" role="alert">
-      {{ message }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+{% extends "base.html" %}
+{% block content %}
+<section class="login">
+  <div class="container my-5">
+      <div class="low">
+          <div class="col-lg-4 text-left">
+          {% for message in get_flashed_messages() %}
+          <div class="alert alert-warning alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+          {% endfor %}
+
+            <h4>メニュー</h2>
+
+            <ul>
+            {% if config.get("ENDPOINT") %}
+              <li><a class="text-xl-start fs-5" href='/call_downstream_api'>Call a downstream API</a></li>
+            {% endif %}
+
+            <li><a class="text-xl-start fs-5"  href="{{ url_for('upload') }}">Upload</a></li>
+            <li><a class="text-xl-start fs-5"  href="{{ url_for('create_folder') }}">Make Folder</a></li>
+            </ul>
+
+            <hr>
+          </div>
+      </div>
   </div>
-  {% endfor %}
-
-    <h3>Microsoft Identity Python Web App</h3>
-    <h4>Logoin: {{ username }}:{{ mail }}</h2>
-
-    <ul>
-    {% if config.get("ENDPOINT") %}
-      <li><a href='/call_downstream_api'>Call a downstream API</a></li>
-    {% endif %}
-
-    <li><a href="{{ url_for('logout') }}">Logout</a></li>
-    <li><a href="{{ url_for('upload') }}">Upload</a></li>
-	<li><a href="{{ url_for('create_folder') }}">Make Folder</a></li>
-    </ul>
-
-    <hr>
-    <footer style="text-align: right">Microsoft identity platform Web App Sample {{ version }}</footer>
-</body>
-</html>
+</section>
+{% endblock %}
 
