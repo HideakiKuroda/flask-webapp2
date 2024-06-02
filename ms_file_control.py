@@ -6,7 +6,7 @@ def upload_file_to_sharepoint(file, auth, app_config):
     try:
         token_response = auth.get_token_for_user(app_config.SCOPE)
         if not token_response:
-            return None
+            return None, 401
 
         headers = {
             'Authorization': 'Bearer ' + token_response['access_token'],
@@ -17,16 +17,19 @@ def upload_file_to_sharepoint(file, auth, app_config):
         file.seek(0)
 
         endpoint = f'https://graph.microsoft.com/v1.0/sites/{app_config.site_id}/drive/items/{app_config.parent_folder2_id}:/{file_name}:/content'
-        
+
         response = requests.put(endpoint, headers=headers, data=file_content)
-        
+
         if response.status_code in (200, 201):
-            return response.json()
+            return response.json(), response.status_code
         else:
-            return None
+            return None, response.status_code
     except Exception as e:
         print(f"Error in upload_file_to_sharepoint: {e}")
-        return None
+        if 'response' in locals():
+            return None, response.status_code
+        else:
+            return None, 500
 
 def upload_file_to_specific_folder(file, folder_id, auth, app_config):
     try:
@@ -54,10 +57,10 @@ def upload_file_to_specific_folder(file, folder_id, auth, app_config):
         print(f"Error in upload_file_to_specific_folder: {e}")
         return None
 
-def list_files(auth, app_config, folder_id=None):
+def list_files(auth, folder_id=None, app_config=None):
     token_response = auth.get_token_for_user(app_config.SCOPE)
     if not token_response:
-        return None, "トークンが取得できませんでした。", 401
+        return None, None, None, None, 401
 
     headers = {
         'Authorization': 'Bearer ' + token_response['access_token'],
@@ -72,21 +75,24 @@ def list_files(auth, app_config, folder_id=None):
     response = requests.get(endpoint, headers=headers)
     
     if response.status_code == 200:
-        items = response.json().get('value', [])
+        items = response.json()['value']
         files = [item for item in items if 'file' in item]
+        file_ids = [item['id'] for item in files]
+
         folders = [item for item in items if 'folder' in item]
-        return files, folders, None, None
+        folder_ids = [item['id'] for item in folders]
+        return files, folders, file_ids, folder_ids, response.status_code
     else:
-        return None, None, "ファイルリストの取得に失敗しました。", response.status_code
+        return None, None, None, None, response.status_code
 
 def download_file(file_id, auth, app_config):
     token_response = auth.get_token_for_user(app_config.SCOPE)
     if not token_response:
-        return None, "トークンが取得できませんでした。", 401
+        return None, 401
 
     headers = {
         'Authorization': 'Bearer ' + token_response['access_token'],
-        'Accept': 'application/json'
+        'Accept': 'application/octet-stream'
     }
 
     endpoint = f'https://graph.microsoft.com/v1.0/sites/{app_config.site_id}/drive/items/{file_id}/content'
@@ -94,14 +100,14 @@ def download_file(file_id, auth, app_config):
     response = requests.get(endpoint, headers=headers, stream=True)
     
     if response.status_code == 200:
-        return BytesIO(response.content), None, 200
+        return BytesIO(response.content),  response.status_code
     else:
-        return None, "ファイルのダウンロードに失敗しました。", response.status_code
+        return None, response.status_code
 
 def create_folder(folder_name, auth, app_config):
     token_response = auth.get_token_for_user(app_config.SCOPE)
     if not token_response:
-        return None, "トークンが取得できませんでした。", 401
+        return None, 401
 
     headers = {
         'Authorization': 'Bearer ' + token_response['access_token'],
@@ -119,7 +125,7 @@ def create_folder(folder_name, auth, app_config):
                 if child.get('name') == folder_name and 'folder' in child:
                     return child['id'], None
         else:
-            return None, "フォルダの確認に失敗しました。"
+            return None, response.status_code
 
     # フォルダ名がない場合、新規作成
     folder_data = {
@@ -134,4 +140,4 @@ def create_folder(folder_name, auth, app_config):
         folder_id = response.json().get('id')
         return folder_id, None
     else:
-        return None, "フォルダの作成に失敗しました。"
+        return None, response.status_code

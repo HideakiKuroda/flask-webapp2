@@ -8,6 +8,7 @@ CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 site_id = os.getenv('SITE_ID')  # 取得したsite_idを設定
 # list_id = os.getenv('LIST_ID')  # 取得したlist_idを設定
 # drive_id =  os.getenv('DRIVE_ID')
+TENANT_ID = os.getenv('TENANT_ID')  # 取得したtenant_idを設定
 parent_folder1_id =  os.getenv('PARENT_FOLDER1_ID')  
 parent_folder2_id =  os.getenv('PARENT_FOLDER2_ID')  
 REDIRECT_PATH = "/getAToken"  # Used for forming an absolute URL to your redirect URI.
@@ -21,7 +22,7 @@ ENDPOINT = 'https://graph.microsoft.com/v1.0/sites/ntb3626.sharepoint.com:/sites
 # You can find the proper permission names from this document
 # https://docs.microsoft.com/en-us/graph/permissions-reference
 SCOPE = ["User.Read"]
-
+SECRET_KEY = os.getenv("SECRET_KEY")
 # Tells the Flask-session extension to store sessions in the filesystem
 SESSION_TYPE = "filesystem"
 # In production, your setup may use multiple web servers behind a load balancer,
