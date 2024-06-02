@@ -17,7 +17,7 @@
   {% endfor %}
 
     <h3>Microsoft Identity Python Web App</h3>
-    <h4>Logoin: {{ user.get("name") }}:{{ user.get("mail") }}:{{ user.get("userPrincipalName") }}</h2>
+    <h4>Logoin: {{ username }}:{{ mail }}</h2>
 
     <ul>
     {% if config.get("ENDPOINT") %}

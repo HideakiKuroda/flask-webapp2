@@ -36,9 +36,6 @@ auth = identity.web.Auth(
     client_id=app.config["CLIENT_ID"],
     client_credential=app.config["CLIENT_SECRET"],
 )
-tenant_id = app.config["TENANT_ID"]
-client_id = app.config["CLIENT_ID"]
-client_secret = app.config["CLIENT_SECRET"]
 
 @app.route("/login")
 def login():
@@ -48,41 +45,11 @@ def login():
         prompt="select_account",
     ))
 
-# @app.route(app_config.REDIRECT_PATH)
-# def auth_response():
-#     result = auth.complete_log_in(request.args)
-#     if "error" in result:
-#         return render_template("auth_error.html", result=result)
-#     return redirect(url_for("index"))
 @app.route(app_config.REDIRECT_PATH)
 def auth_response():
     result = auth.complete_log_in(request.args)
     if "error" in result:
         return render_template("auth_error.html", result=result)
-
-    # ここでアクセストークンを取得する
-    token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
-    data = {
-        "grant_type": "client_credentials",
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "scope": "https://graph.microsoft.com/.default"
-    }
-    response = requests.post(token_url, data=data)
-    access_token = response.json()["access_token"]
-
-    # アクセストークンを使用して Microsoft Graph API を呼び出す
-    graph_url = "https://graph.microsoft.com/v1.0/me"
-    headers = {
-        "Authorization": f"Bearer {access_token}"
-    }
-    response = requests.get(graph_url, headers=headers)
-    user_info = response.json()
-    # user_info = {k: v for k, v in user_info.items() if v is not None and v != 'undefined'}
-    print(type(user_info['name']))
-    # ユーザー情報をセッションに保存する
-    session["user_info"] = user_info
-
     return redirect(url_for("index"))
 
 @app.route("/logout")
@@ -95,7 +62,10 @@ def index():
         return render_template('config_error.html')
     if not auth.get_user():
         return redirect(url_for("login"))
-    return render_template('index.html', user=auth.get_user(), version=__version__)
+    user_info = ms_file_control.user_info(auth, app_config)
+    username = user_info["displayName"]
+    mail = user_info["mail"]
+    return render_template('index.html', user=auth.get_user(), username=username,mail=mail, version=__version__)
 
 @app.route("/call_downstream_api")
 def call_downstream_api():
@@ -104,7 +74,7 @@ def call_downstream_api():
         return redirect(url_for("login"))
     
      # セッションからユーザー情報を取得する
-    user_info = session.get("user_info")
+    user_info = ms_file_control.user_info(auth, app_config)
 
     api_result = requests.get(
         app_config.ENDPOINT,
