@@ -119,7 +119,7 @@ def create_folder(folder_name, auth, app_config):
     if folder_name:
         # フォルダが存在するか確認
         response = requests.get(endpoint, headers=headers)
-        if response.status_code == 200:
+        if response.status_code in (200, 201):
             children = response.json().get('value', [])
             for child in children:
                 if child.get('name') == folder_name and 'folder' in child:
@@ -136,9 +136,9 @@ def create_folder(folder_name, auth, app_config):
 
     response = requests.post(endpoint, headers=headers, json=folder_data)
     
-    if response.status_code == 201:
+    if response.status_code in (200, 201):
         folder_id = response.json().get('id')
-        return folder_id, None
+        return folder_id, response.status_code
     else:
         return None, response.status_code
 

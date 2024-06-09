@@ -11,7 +11,7 @@
     <ul>
     {% for file in files %}
         <li>
-            {{ file.name }} - <a href="{{ url_for('download_file', file_id=file.id, file_name=file.name) }}">ダウンロード</a>
+            {{ file.name }}-{{ file.id }} - <a href="{{ url_for('download_file', file_id=file.id, file_name=file.name) }}">ダウンロード</a>
         </li>
     {% endfor %}
     </ul>
@@ -19,7 +19,7 @@
     <ul>
     {% for folder in folders %}
         <li>
-            {{ folder.name }} - <a href="{{ url_for('list_files', folder_id=folder.id) }}">内容</a>
+            {{ folder.name }}-{{ folder.id }} - <a href="{{ url_for('list_files', folder_id=folder.id) }}">内容</a>
         </li>
     {% endfor %}
     </ul>
