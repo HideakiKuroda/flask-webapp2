@@ -9,12 +9,12 @@
     <a href="javascript:window.history.go(-1)">Back</a>
 	<h1>ファイルアップロード</h1>
     <h2>フォルダ作成</h2>
-    <form method="post" action="{{ url_for('create_folder') }}">
+    <form method="post" action="{{ url_for('file_control.create_folder') }}">
         <label for="folder_name">フォルダ名:</label>
         <input type="text" name="folder_name" id="folder_name" required>
         <input type="submit" value="フォルダ作成">
     </form>
     
-    <a href="{{ url_for('list_files') }}">ファイルリストを見る</a>
+    <a href="{{ url_for('file_control.list_files') }}">ファイルリストを見る</a>
 </body>
 </html>

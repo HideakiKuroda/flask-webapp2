@@ -11,7 +11,7 @@
                       <a href='{{ auth_uri }}' target=_blank>{{ auth_uri }}</a>
                       to authenticate.
                     </li>
-                    <li>And then <a href="{{ url_for('auth_response') }}">proceed</a>.</li>
+                    <li>And then <a href="{{ url_for('logins.auth_response') }}">proceed</a>.</li>
                   </ol>
                   {% else %}
                   <ul><li><a class="text-xl-start fs-5" href='{{ auth_uri }}'>>>Sign In</a></li></ul>

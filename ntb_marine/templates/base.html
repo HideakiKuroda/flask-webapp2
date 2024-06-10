@@ -44,7 +44,7 @@
               {% if username %} 
               <!-- #リグインしているのが誰かをチェックできる from flask_login import  UserMixin としてUser Modelで継承するとかのう -->
               <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('logout') }}">ログアウト</a>
+                <a class="nav-link" href="{{ url_for('logins.logout') }}">ログアウト</a>
               </li>
               <span class="navbar-text ms-3">
                 {{ username }}
