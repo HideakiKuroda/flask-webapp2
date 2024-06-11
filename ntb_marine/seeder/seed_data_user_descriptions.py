@@ -1,6 +1,6 @@
-from ship_management import db
+from ntb_marine import db
 # from ship_management.models import User,UserDescription,Department,DeptAssignment,Ship,ShipAssignment,ShipAttachment,OperatSection,NavigationArea,Summary,Summary2,ShipOwner,Concerned,ProCategory,TaskCategory,Project,Task,ProAttachment,ProAssignment,TaskAttachment,ProDescription,TakDescription,Role,UserHasRoles,Schedule
-from ship_management.models import UserDescription
+from ntb_marine.models import UserDescription
 
 def UserDescriptionSeeder():
     user_descriptions01 = UserDescription(user_id= "1", emp_id="", name_2 = "太田",  name_1 = "正紀" , memo="", phone="080-2505-3769")

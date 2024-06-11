@@ -1,6 +1,6 @@
-from ship_management import db
+from ntb_marine import db
 # from ship_management.models import User,UserDescription,Department,DeptAssignment,Ship,ShipAssignment,ShipAttachment,OperatSection,NavigationArea,Summary,Summary2,ShipOwner,Concerned,ProCategory,TaskCategory,Project,Task,ProAttachment,ProAssignment,TaskAttachment,ProDescription,TakDescription,Role,UserHasRoles,Schedule
-from ship_management.models import Summary2
+from ntb_marine.models import Summary2
 
 def Summary2seeder():
         Summary01 = Summary2(ship_id= 1, insurance_type = '6', international_ton = '309', passenger_capacity = '12 (24h沿海)', speed50 = '11.87', speed100 = '13.81', rpm_peller50 = '262', rpm_peller100 = '330', slip_rate50 = '27.16', slip_rate100 = '32.73', tug_force50 = '25', tug_force100 = '41.3')

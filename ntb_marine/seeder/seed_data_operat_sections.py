@@ -1,6 +1,6 @@
-from ship_management import db
+from ntb_marine import db
 # from ship_management.models import User,UserDescription,Department,DeptAssignment,Ship,ShipAssignment,ShipAttachment,OperatSection,NavigationArea,Summary,Summary2,ShipOwner,Concerned,ProCategory,TaskCategory,Project,Task,ProAttachment,ProAssignment,TaskAttachment,ProDescription,TakDescription,Role,UserHasRoles,Schedule
-from ship_management.models import OperatSection
+from ntb_marine.models import OperatSection
 
     # def __init__(self, section, memo):
     #     self.section = section

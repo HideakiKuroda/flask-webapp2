@@ -5,7 +5,6 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from ntb_marine import db  # SQLAlchemyインスタンスをインポート
 from datetime import datetime
 from pytz import timezone
-from ntb_marine import db, login_manager  
 from sqlalchemy.orm import backref
 from sqlalchemy import Column, DateTime
 from sqlalchemy.ext.declarative import declared_attr
@@ -25,30 +24,45 @@ class User(db.Model,TimestampMixin,UserMixin):
     __tablename__ = 'users' 
     id = db.Column(db.Integer, primary_key = True)
     email = db.Column(db.String(64), unique = True, index = True)
-    name = db.Column(db.String(64), unique = True, index = True)
-    password_hash = db.Column(db.String(128))
-    ms_id = db.Column(db.String(64))
+    name = db.Column(db.String(64))
+    ms_email = db.Column(db.String(128))
+    ms_id = db.Column(db.String(128))
     #relationship
     user_descriptions = db.relationship('UserDescription', backref = 'user', uselist = False) #一対一
     departments = db.relationship('Department', secondary='dept_assignments', backref=db.backref('user', lazy='dynamic')) #多対多
     # ships = db.relationship('Ship', secondary='ship_assignments', backref=db.backref('user', lazy='dynamic')) #多対多
     ships = db.relationship('Ship', secondary='ship_assignments', back_populates='users')
     roles = db.relationship('Role', secondary='user_has_roles', backref=db.backref('user', lazy='dynamic')) #多対多
-    def __init__(self, email, name, password,ms_id):
+    def __init__(self, email, name, ms_email,ms_id):
         self.email = email  #インスタンスの属性として設定
         self.name = name
-        self.password = password
+        self.ms_email = ms_email
         self.ms_id = ms_id
 
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-    #パスワードを直接参照できないようにするために@property
+    def get_id(self):
+        return str(self.id)
+
     @property
-    def password(self): 
-        raise AttributeError('password is not a readable attribute')
-    @password.setter
-    def password(self,password):
-        self.password_hash = generate_password_hash(password)
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False    
+
+    # def check_password(self, password):
+    #     return check_password_hash(self.password_hash, password)
+    # #パスワードを直接参照できないようにするために@property
+    # @property
+    # def password(self): 
+    #     raise AttributeError('password is not a readable attribute')
+    # @password.setter
+    # def password(self,password):
+    #     self.password_hash = generate_password_hash(password)
     
     
 class UserDescription(db.Model,TimestampMixin):

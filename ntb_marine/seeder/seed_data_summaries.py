@@ -1,6 +1,6 @@
-from ship_management import db
+from ntb_marine import db
 # from ship_management.models import User,UserDescription,Department,DeptAssignment,Ship,ShipAssignment,ShipAttachment,OperatSection,NavigationArea,Summary,Summary2,ShipOwner,Concerned,ProCategory,TaskCategory,Project,Task,ProAttachment,ProAssignment,TaskAttachment,ProDescription,TakDescription,Role,UserHasRoles,Schedule
-from ship_management.models import Summary
+from ntb_marine.models import Summary
 
 def SummarySeeder():
     summary01 = Summary(ship_id = 1, official_number = '140272', signal_code = 'JD2202', engine_kw = '3600', pera_spec = 'ZP-21-3A', me_model = 'ﾆｲｶﾞﾀ6L28HX', me_sno = '23892/23893', pera_sno = 'P0835/0836', fire_equipt = '3・4', full_length = '33.3', lpp = '29', breadth = '9.4', beam_depth = '4', mold_draft = '3.1', draft_mark_F = '', draft_mark_A = '', fm_bl = '', draft_m = '', layer_2or3 = '2.5層', winch_tension = '船首 2', stern_towboat = 'ﾄｰｲﾝｸﾞﾋﾞｯﾄH:ﾛｰﾌﾟｶﾞｰﾄﾞ', intake = 'ﾏｽﾄ　上部', exhaust = 'ZP後方', aux_engine = '', dk_machine_pp = '主機右舷付', fire_pump = '主機左舷付', harbor_gen = '機関室後部', fire_extinguish = '粉末消火設備')

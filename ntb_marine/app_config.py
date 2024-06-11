@@ -25,6 +25,7 @@ SCOPE = ["User.Read"]
 SECRET_KEY = os.getenv("SECRET_KEY")
 # Tells the Flask-session extension to store sessions in the filesystem
 SESSION_TYPE = "filesystem"
+
 # In production, your setup may use multiple web servers behind a load balancer,
 # and the subsequent requests may not be routed to the same web server.
 # In that case, you may either use a centralized database-backed session store,

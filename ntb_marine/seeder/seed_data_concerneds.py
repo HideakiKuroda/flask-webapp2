@@ -1,6 +1,6 @@
-from ship_management import db
+from ntb_marine import db
 # from ship_management.models import User,UserDescription,Department,DeptAssignment,Ship,ShipAssignment,ShipAttachment,OperatSection,NavigationArea,Summary,Summary2,ShipOwner,Concerned,ProCategory,TaskCategory,Project,Task,ProAttachment,ProAssignment,TaskAttachment,ProDescription,TakDescription,Role,UserHasRoles,Schedule
-from ship_management.models import Concerned
+from ntb_marine.models import Concerned
 
 # def __init__(self, ship_id, operator, borrower, manager, crew_arrange ):
 #         self.ship_id = ship_id

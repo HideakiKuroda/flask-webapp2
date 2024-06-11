@@ -1,10 +1,20 @@
 from flask import render_template, request, url_for, redirect, flash, abort
 from flask import Blueprint
-from ntb_marine import app_config, auth, __version__, app
-from ntb_marine import ms_file_control 
+from ntb_marine import app_config, auth, __version__, app, db
+from ntb_marine import ms_file_control
+from ntb_marine.models import User
 import requests
+from flask_login import login_user, LoginManager,login_user, logout_user, login_required, current_user 
 
 logins = Blueprint('logins', __name__)
+
+login_manager = LoginManager() #インスタンス化
+login_manager.init_app(app)  #appとログイン機能を紐づけ
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
 
 @logins.route("/login")
 def login():
@@ -19,10 +29,32 @@ def auth_response():
     result = auth.complete_log_in(request.args)
     if "error" in result:
         return render_template("auth_error.html", result=result)
+    
+    user_info = ms_file_control.user_info(auth, app_config)
+
+    # ログインしたユーザーを、User モデルのインスタンスにマッピングします。
+    user = User.query.filter_by(ms_email=user_info["mail"]).first()
+    # ユーザーが登録されていない場合は、新しいユーザーを作成します。
+    print(f"ユーザーID: {user.id}")
+    if not user:
+        user = User(email="", name=user_info["displayName"], ms_email=user_info["mail"], ms_id=user_info["id"])
+        db.session.add(user)
+        db.session.commit()
+    # ユーザーが既に登録されている場合で、idが空白の場合はそのユーザーidを入力します。
+    if user.ms_id is None or user.ms_id == "":
+        # ユーザーは登録されているが、ID が登録されていない場合は、ID を登録します。
+        user.ms_id = user_info["id"]
+        db.session.commit() 
+
+    # ユーザーをログインします。
+    login_user(user)
+
     return redirect(url_for("logins.index"))
 
 @logins.route("/logout")
+@login_required
 def logout():
+    logout_user()
     return redirect(auth.log_out(url_for("logins.index", _external=True)))
 
 @logins.route("/")
