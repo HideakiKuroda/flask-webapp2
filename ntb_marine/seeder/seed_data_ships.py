@@ -3,21 +3,7 @@ from ntb_marine import db
 from ntb_marine.models import Ship
 from datetime import datetime
 
-# 日付データのサンプル
-# date_str = '2021-09-10'  # 文字列形式の日付データ
-# date_obj = datetime.strptime(date_str, '%Y-%m-%d')  # datetimeオブジェクトに変換
 
-
-      # self.name = name
-      # self.ex_name = ex_name  
-      # self.yard = yard 
-      # self.ship_no = ship_no 
-      # self.delivered = delivered 
-      # self.issued_Inscert = issued_Inscert 
-      # self.expiry_date = expiry_date 
-      # self.gross_tonn = gross_tonn 
-      # self.operat_section_id = operat_section_id 
-      # self.navigation_area_id = navigation_area_id
 
 def shipsSeeder():
    ships01 = Ship( name= 'おふゆ' ,delivered=datetime.strptime( '2006-01-18', '%Y-%m-%d'), issued_Inscert=datetime.strptime( '2021-09-10', '%Y-%m-%d'), expiry_date=datetime.strptime('2027-08-26', '%Y-%m-%d'), ex_name= '' , former_name= 'くまの丸' , yard = '金川' , ship_no = '548',  gross_tonn = '194' , operat_section_id = '4' , navigation_area_id= '1' )

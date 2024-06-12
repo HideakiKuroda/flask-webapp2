@@ -28,9 +28,7 @@ class User(db.Model,TimestampMixin,UserMixin):
     ms_email = db.Column(db.String(128))
     ms_id = db.Column(db.String(128))
     #relationship
-    user_descriptions = db.relationship('UserDescription', backref = 'user', uselist = False) #一対一
     departments = db.relationship('Department', secondary='dept_assignments', backref=db.backref('user', lazy='dynamic')) #多対多
-    # ships = db.relationship('Ship', secondary='ship_assignments', backref=db.backref('user', lazy='dynamic')) #多対多
     ships = db.relationship('Ship', secondary='ship_assignments', back_populates='users')
     roles = db.relationship('Role', secondary='user_has_roles', backref=db.backref('user', lazy='dynamic')) #多対多
     def __init__(self, email, name, ms_email,ms_id):
@@ -54,34 +52,6 @@ class User(db.Model,TimestampMixin,UserMixin):
     def is_anonymous(self):
         return False    
 
-    # def check_password(self, password):
-    #     return check_password_hash(self.password_hash, password)
-    # #パスワードを直接参照できないようにするために@property
-    # @property
-    # def password(self): 
-    #     raise AttributeError('password is not a readable attribute')
-    # @password.setter
-    # def password(self,password):
-    #     self.password_hash = generate_password_hash(password)
-    
-    
-class UserDescription(db.Model,TimestampMixin):
-    __tablename__ = 'user_descriptions'
-    id = db.Column(db.Integer, primary_key = True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    emp_id = db.Column(db.String(128))
-    name_2 = db.Column(db.String(128))
-    name_1 = db.Column(db.String(128))
-    phone = db.Column(db.String(128))
-    email_2  = db.Column(db.String(128))
-    memo = db.Column(db.Text)
-    def __init__(self, user_id, emp_id, name_2, name_1, phone, memo):
-        self.user_id = user_id  #インスタンスの属性として設定
-        self.emp_id = emp_id
-        self.name_2 = name_2
-        self.name_1 = name_1
-        self.phone = phone
-        self.memo = memo
 
 class Department(db.Model,TimestampMixin):
     __tablename__ = 'departments'
@@ -496,12 +466,45 @@ class Schedule(db.Model, TimestampMixin):
         self.periodic_start2 = periodic_start2
         self.periodic_dline2 = periodic_dline2
 
+class DocTemplate(db.Model, TimestampMixin):
+    __tablename__ = 'doc_templates'
+    id = db.Column(db.Integer, primary_key = True)
+    doc_code = db.Column(db.String(12))
+    name = db.Column(db.String(128))
+    file_name = db.Column(db.String(128))
+    file_id = db.Column(db.String(255))
+    file_category_id = db.Column(db.Integer, db.ForeignKey('file_categories.id'))
+    def __init__(self, doc_code, name, file_name, file_id, file_category_id ):
+        self.doc_code = doc_code
+        self.name = name
+        self.file_name = file_name
+        self.file_id = file_id
+        self.file_category_id = file_category_id
 
 
+class FileCategory(db.Model, TimestampMixin):
+    __tablename__ = 'file_categories'
+    id = db.Column(db.Integer, primary_key = True)
+    name = db.Column(db.String(128))
+    doc_templates = db.relationship('DocTemplate', backref='file_category', lazy='dynamic')
+    documents = db.relationship('Document', backref='file_category', lazy='dynamic')
+    def __init__(self, name):
+        self.name = name
 
-
-
-
+class Document(db.Model, TimestampMixin):
+    __textname__ = 'documents'
+    id = db.Column(db.Integer, primary_key = True)
+    doc_code = db.Column(db.String(12))
+    name = db.Column(db.String(128))
+    file_name = db.Column(db.String(128))
+    file_id = db.Column(db.String(255))
+    file_category_id = db.Column(db.Integer, db.ForeignKey('file_categories.id'))
+    def __init__(self, doc_code, name, file_name, file_id,file_category_id ):
+        self.doc_code = doc_code
+        self.name = name
+        self.file_name = file_name
+        self.file_id = file_id
+        self.file_category_id = file_category_id
 
 
 
