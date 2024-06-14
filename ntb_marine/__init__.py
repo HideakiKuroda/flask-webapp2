@@ -47,7 +47,6 @@ auth = identity.web.Auth(
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-
 #"Migrate" の設定
 Migrate(app, db)
 # データベースの作成
