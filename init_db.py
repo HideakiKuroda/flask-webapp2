@@ -12,6 +12,7 @@ from ntb_marine.seeder.seed_data_file_categories import file_categorySeeder
 from ntb_marine.seeder.seed_data_doc_templates import doc_templatesSeeder
 from ntb_marine.seeder.seed_data_departments import departmentsSeeder
 from ntb_marine.seeder.seed_data_dept_assignments import deptAssignmentsSeeder
+from ntb_marine.seeder.seed_data_ship_owners import ship_ownersSeeder
 
 with app.app_context():
     # db.drop_table('dec_templates')
@@ -30,5 +31,6 @@ with app.app_context():
     # doc_templatesSeeder()
     # departmentsSeeder()
     # deptAssignmentsSeeder()
+    ship_ownersSeeder()
 
     db.session.commit()

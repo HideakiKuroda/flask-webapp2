@@ -253,9 +253,9 @@ class ShipOwner(db.Model,TimestampMixin):
     ship_id = db.Column(db.Integer, db.ForeignKey('ships.id'))
     name = db.Column(db.String(128))
     ratio = db.Column(db.Numeric(8,2))
-    def __init__(self, ship_id, owner_name, ratio ):
+    def __init__(self, ship_id, name, ratio ):
         self.ship_id = ship_id
-        self.owner_name = owner_name
+        self.name = name
         self.ratio = ratio
 
 class Concerned(db.Model,TimestampMixin):
