@@ -35,7 +35,6 @@ def auth_response():
     # ログインしたユーザーを、User モデルのインスタンスにマッピングします。
     user = User.query.filter_by(ms_email=user_info["mail"]).first()
     # ユーザーが登録されていない場合は、新しいユーザーを作成します。
-    print(f"ユーザーID: {user.id}")
     if not user:
         user = User(email="", name=user_info["displayName"], ms_email=user_info["mail"], ms_id=user_info["id"])
         db.session.add(user)
@@ -48,6 +47,7 @@ def auth_response():
 
     # ユーザーをログインします。
     login_user(user)
+    print(f"ユーザーID: {user.id}")
 
     return redirect(url_for("logins.index"))
 
