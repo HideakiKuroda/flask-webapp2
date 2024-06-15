@@ -47,7 +47,7 @@ def auth_response():
 
     # ユーザーをログインします。
     login_user(user)
-    print(f"ユーザーID: {user.id}")
+    # print(f"ユーザーID: {user.id}")
 
     return redirect(url_for("logins.index"))
 
