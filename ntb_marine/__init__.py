@@ -62,9 +62,12 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 from ntb_marine.logins.views import logins
 from ntb_marine.file_control.views import file_control
+from ntb_marine.document.views import document
 
 app.register_blueprint(logins)
 app.register_blueprint(file_control)
+app.register_blueprint(document)
+
 
 
 

@@ -26,7 +26,7 @@ def upload():
             else:
                 flash("ファイルのアップロードに失敗しました。")
             return redirect(url_for("logins.index"))
-    return render_template("upload.html", username=auth.get_user()["name"])
+    return render_template("file_control/upload.html", username=auth.get_user()["name"])
 
 @file_control.route("/list_files", methods=["GET"])
 @file_control.route("/list_files/<folder_id>", methods=["GET"])
@@ -34,7 +34,7 @@ def list_files(folder_id=None):
     files, folders, file_ids, folder_ids, status = ms_file_control.list_files(auth, folder_id, app_config)
     if status!= 200:
         return  status
-    return render_template("file_list.html", files=files, folders=folders)
+    return render_template("file_control/file_list.html", files=files, folders=folders)
 
 @file_control.route("/download/<file_id>/<file_name>", methods=["GET"])
 def download_file(file_id, file_name):
@@ -47,7 +47,7 @@ def download_file(file_id, file_name):
 def create_folder():
     folder_name = request.form.get("folder_name")
     if not folder_name:
-        return render_template('create_folder.html')
+        return render_template('file_control/create_folder.html')
     folder_id, status = ms_file_control.create_folder(folder_name, auth, app_config)
     if status not in [200, 201]:
         flash("error: Could not create folder")
@@ -76,5 +76,5 @@ def upload_to_folder_page(folder_id):
             else:
                 flash("ファイルのアップロードに失敗しました。")
             return redirect(url_for("logins.index"))
-    return render_template("upload_to_folder.html", folder_id=folder_id)
+    return render_template("file_control/upload_to_folder.html", folder_id=folder_id)
 

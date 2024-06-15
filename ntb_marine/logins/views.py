@@ -18,7 +18,7 @@ def load_user(user_id):
 
 @logins.route("/login")
 def login():
-    return render_template("login.html", version=__version__, **auth.log_in(
+    return render_template("users/login.html", version=__version__, **auth.log_in(
         scopes=app_config.SCOPE,
         redirect_uri=url_for("logins.auth_response", _external=True),
         prompt="select_account",
@@ -82,5 +82,5 @@ def call_downstream_api():
         headers={'Authorization': 'Bearer ' + token['access_token']},
         timeout=30,
     ).json()
-    return render_template('display.html', result=api_result,user_info=user_info)
+    return render_template('file_control/display.html', result=api_result,user_info=user_info)
 
