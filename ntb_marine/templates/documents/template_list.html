@@ -31,8 +31,11 @@
 							</div>						
 						<h5 class="card-title">{{ template.name }}</h5>
 						<p class="card-text">No.:{{ template.doc_code }}</p>
-						<a href="{{ url_for('document.download', doc_template_id=template.id ) }}" class="btn btn-primary">書類を作成</a>
-						</div>
+						<!-- <a href="{{ url_for('document.download', doc_template_id=template.id ) }}" class="btn btn-primary">書類を作成</a> -->
+						<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createDocumentModal">
+							書類を作成
+						</button>
+					</div>
 					</div>
 					</div>
 					{% endfor %}	
@@ -57,7 +60,7 @@
 					</form>
 				</div>
 
-				<!-- <div class="container-fluid mb-3">
+				<div class="container-fluid mb-3">
 					<form action="#" class="" method="POST">
 						<div class="row">
 							<div class="col">
@@ -73,7 +76,7 @@
 							<button type="button" class="btn btn-secondary">検索</button>
 						</div>
 					</form>
-				</div> -->
+				</div>
 				<!-- 会社情報 -->
 				<!-- カテゴリ一覧 -->
 				<div class="p-4 mb-2">
@@ -129,4 +132,52 @@
 		</nav>
 	</div> <!-- pagination -->
 </div>   <!-- <div class="container my-3"></div> -->
+       <!-- Modal -->
+        <div class="modal fade" id="createDocumentModal" tabindex="-1" role="dialog" aria-labelledby="createDocumentModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="createDocumentModalLabel">書類作成</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form method="POST">
+                        <div class="modal-body">
+                            {{ form.hidden_tag() }}
+                            <div class="form-group">
+                                <label for="doc_code">書類のコード</label>
+                                <select id="doc_code" name="doc_code" class="form-control" required>
+                                    <option value="">選択してください</option>
+                                    {% for template in templates %}
+                                        <option value="{{ template.doc_code }}">{{ template.name }} - {{ template.doc_code }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="searchtext">署名</label>
+                                {{ form.searchtext(class="form-control") }}
+                            </div>
+                            <div class="form-group">
+                                <label for="ship_id">船名</label>
+                                <select id="ship_id" name="ship_id" class="select2_01, form-control" required>
+                                    <option value="">選択してください</option>
+									<option value="1">おふゆ</option>
+									<option value="2">そうや</option>
+									<option value="3">まみや</option>
+									<option value="4">つがる</option>
+									<option value="5">北野丸</option>
+							  	</select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}

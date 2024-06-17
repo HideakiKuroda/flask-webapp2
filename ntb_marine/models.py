@@ -499,12 +499,16 @@ class Document(db.Model, TimestampMixin):
     file_name = db.Column(db.String(128))
     file_id = db.Column(db.String(255))
     file_category_id = db.Column(db.Integer, db.ForeignKey('file_categories.id'))
-    def __init__(self, doc_code, name, file_name, file_id,file_category_id ):
+    signature = db.Column(db.String(128))
+    ship_id = db.Column(db.Integer, db.ForeignKey('ships.id'))
+    def __init__(self, doc_code, name, file_name, file_id,file_category_id, signature, ship_id ):
         self.doc_code = doc_code
         self.name = name
         self.file_name = file_name
         self.file_id = file_id
         self.file_category_id = file_category_id
+        self.signature = signature
+        self.ship_id = ship_id
 
 
 

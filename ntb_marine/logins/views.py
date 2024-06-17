@@ -63,10 +63,10 @@ def index():
         return render_template('config_error.html')
     if not auth.get_user():
         return redirect(url_for("logins.login"))
-    user_info = ms_file_control.user_info(auth, app_config)
-    username = user_info["displayName"]
-    mail = user_info["mail"]
-    return render_template('index.html', user=auth.get_user(), username=username,mail=mail, version=__version__)
+    # user_info = ms_file_control.user_info(auth, app_config)
+    # username = user_info["displayName"]
+    # mail = user_info["mail"]
+    return render_template('index.html', user=auth.get_user(), current_user=current_user, version=__version__)
 
 @logins.route("/call_downstream_api")
 def call_downstream_api():
@@ -82,5 +82,5 @@ def call_downstream_api():
         headers={'Authorization': 'Bearer ' + token['access_token']},
         timeout=30,
     ).json()
-    return render_template('file_control/display.html', result=api_result,user_info=user_info)
+    return render_template('file_control/display.html', result=api_result,user_info=user_info,current_user=current_user, version=__version__)
 
