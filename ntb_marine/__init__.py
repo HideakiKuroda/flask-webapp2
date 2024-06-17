@@ -47,7 +47,6 @@ auth = identity.web.Auth(
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-
 #"Migrate" の設定
 Migrate(app, db)
 # データベースの作成
@@ -63,9 +62,12 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 from ntb_marine.logins.views import logins
 from ntb_marine.file_control.views import file_control
+from ntb_marine.document.views import document
 
 app.register_blueprint(logins)
 app.register_blueprint(file_control)
+app.register_blueprint(document)
+
 
 
 

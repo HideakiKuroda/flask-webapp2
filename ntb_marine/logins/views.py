@@ -18,7 +18,7 @@ def load_user(user_id):
 
 @logins.route("/login")
 def login():
-    return render_template("login.html", version=__version__, **auth.log_in(
+    return render_template("users/login.html", version=__version__, **auth.log_in(
         scopes=app_config.SCOPE,
         redirect_uri=url_for("logins.auth_response", _external=True),
         prompt="select_account",
@@ -35,7 +35,6 @@ def auth_response():
     # ログインしたユーザーを、User モデルのインスタンスにマッピングします。
     user = User.query.filter_by(ms_email=user_info["mail"]).first()
     # ユーザーが登録されていない場合は、新しいユーザーを作成します。
-    print(f"ユーザーID: {user.id}")
     if not user:
         user = User(email="", name=user_info["displayName"], ms_email=user_info["mail"], ms_id=user_info["id"])
         db.session.add(user)
@@ -48,6 +47,7 @@ def auth_response():
 
     # ユーザーをログインします。
     login_user(user)
+    # print(f"ユーザーID: {user.id}")
 
     return redirect(url_for("logins.index"))
 
@@ -82,5 +82,5 @@ def call_downstream_api():
         headers={'Authorization': 'Bearer ' + token['access_token']},
         timeout=30,
     ).json()
-    return render_template('display.html', result=api_result,user_info=user_info)
+    return render_template('file_control/display.html', result=api_result,user_info=user_info)
 

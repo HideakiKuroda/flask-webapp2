@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="index">
+  <div class="container my-5">
+      <div class="row">
+          <div class="col-lg-8 text-left">
+            <a href="javascript:window.history.go(-1)">Back</a>
+              {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                  <ul>
+                  {% for message in messages %}
+                    <li>{{ message }}</li>
+                  {% endfor %}
+                  </ul>
+                {% endif %}
+              {% endwith %}
+              <form action="{{ url_for('file_control.upload') }}" method="post" enctype="multipart/form-data">
+                  <input type="file" name="file">
+                  <button type="submit">Upload</button>
+              </form>
+            <a href="{{ url_for('file_control.list_files') }}">ファイルリストを見る</a>
+            </div>
+          </div>
+      </div>
+    </section>
+{% endblock %}

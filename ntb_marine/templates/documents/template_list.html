@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block content %}
+<header id="page-header">
+	<dev class="container my-3 bg-light">
+		<div class="row">
+			<div class="col-md-6 m-auto text-center">
+					<h1 class="fst-italic">書類テンプレートの選択</h1>
+					<p>文書のテンプレートから書類を作成します</p>
+			</div>
+		</div>
+	</dev>
+</header>
+<!-- Page discription -->
+<div class="container my-3">
+	<div class="row mb-2">
+		<!-- content(Left) -->
+		<div class="col-8">
+		<!-- Blog Post -->
+			<section id="blog_post">
+				<div class="row">
+					{% for template in doc_templates.items %}
+					<div class="col-sm-3 mb-2">
+					<div class="card">
+						<div class="card-body">
+							<div class="mb-2" style="text-align: center;">
+								{% if template.file_name.endswith('.xlsx') %}
+									<img src="{{ url_for('static', filename='/Excel/Excel-1.png')}}"  class="img-fluid card-img-top" style="max-height: 10rem; width: 50%;">
+								{% elif template.file_name.endswith('.docx') %}
+									<img src="{{ url_for('static', filename='/Word/Word-1.png')}}"  class="img-fluid card-img-top" style="max-height: 10rem; width: 50%;">
+								{% endif %}
+							</div>						
+						<h5 class="card-title">{{ template.name }}</h5>
+						<p class="card-text">No.:{{ template.doc_code }}</p>
+						<a href="{{ url_for('document.download', doc_template_id=template.id ) }}" class="btn btn-primary">書類を作成</a>
+						</div>
+					</div>
+					</div>
+					{% endfor %}	
+				</div>	
+			</section>
+		
+			<!-- メニュー  -->
+			<section id="menu">
+
+			</section>
+		</div>
+		<!-- Side Bar -->
+		<div class="col-md-4">
+			<div class="sticky-top">
+			<!-- <div class="position-sticky" style="top: 2rem;"> -->
+				<!-- 検索欄 -->
+				<div class="container-fluid mb-3">
+					<form action="{{ url_for('document.search')}}" class="d-flex" method="POST">
+						{{ form.hidden_tag() }}
+						{{ render_field(form.searchtext, class="form-control me-2", placeholder="検索するテキスト入力") }}
+						{{ form.submit(class="btn btn-outline-success") }}
+					</form>
+				</div>
+
+				<!-- <div class="container-fluid mb-3">
+					<form action="#" class="" method="POST">
+						<div class="row">
+							<div class="col">
+							<select class="form-select" >
+
+								<option selected>Open this select menu</option>
+								<option value="1">One</option>
+								<option value="2">Two</option>
+								<option value="3">Three</option>
+							</select>
+						</div>
+						<div class="col">
+							<button type="button" class="btn btn-secondary">検索</button>
+						</div>
+					</form>
+				</div> -->
+				<!-- 会社情報 -->
+				<!-- カテゴリ一覧 -->
+				<div class="p-4 mb-2">
+					<h4 class="fst-italic">CATEGORY<span class="ms-2 fs-6">カテゴリ一覧</span></h4>
+					<hr>
+					<ol class="list-unstyled">
+						{% for category in file_categories %}
+						<li>
+							<a href="{{ url_for('document.category_posts', file_category_id=category.id ) }}" class="text-decoration-none">
+								<span class="ms-2">{{ category.name }}</span>
+							</a>
+						</li>
+						<hr>
+						{% endfor %}
+					</ol>
+				</div>                
+				<!-- 最新記事 -->
+				<div class="p-4 mb-2">
+					<h4 class="fst-italic">RECENT POST<span class="ms-2 fs-6">最新記事</span></h4>
+					<hr>
+					<ol class="list-unstyled">
+						<li>
+							<a href="#" class="text-decoration-none">
+								<img src="#" class="img-fluid" width="90" height="50">
+								<span class="ms-2"></span>
+							</a>
+						</li>
+						<hr>
+					</ol>
+				</div>
+			</div> 
+		</div> <!-- Side Bar end-->
+	</div>   <!--  <div class="row mb-2"></div> -->
+
+	<!-- pagination -->
+	<div class="row mb-2">
+		<nav class="my-2" aria-label="Page navigation">
+			<ul class="pagination justify-content-center">
+			<li {% if doc_templates.has_prev %}class="page-item"{% else %} class="page-item disabled"{% endif %}><a class="page-link" href="{% if doc_templates.has_prev %}{{ url_for('document.doc_temps', page=doc_templates.prev_num)}}{% else %}#{% endif %}">前へ</a></li>
+			{% for page_num in doc_templates.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+				{% if page_num %}
+					{% if doc_templates.page == page_num %}
+					<li class="page-item disabled"><a class="page-link" href="#">{{ page_num }}</a></li>
+					{% else %}
+					<li class="page-item"><a class="page-link" href="{{ url_for('document.doc_temps', page=page_num)}}">{{ page_num }}</a></li>            
+					{% endif %}
+				{% else %}
+				<li class="page-item disabled"><a class="page-link" href="#">&hellip;</a></li>
+				{% endif %}
+			{% endfor %}
+			<li {% if doc_templates.has_next %}class="page-item"{% else %}class="page-item disabled"{% endif %}><a class="page-link" href="{% if doc_templates.has_next %}{{ url_for('document.doc_temps', page=doc_templates.next_num)}}{% else %}#{% endif %}">次へ</a></li>
+			</ul>
+		</nav>
+	</div> <!-- pagination -->
+</div>   <!-- <div class="container my-3"></div> -->
+{% endblock %}
