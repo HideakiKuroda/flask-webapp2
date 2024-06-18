@@ -151,4 +151,4 @@ def create_document():
                 return abort(status_code)
     return  redirect(url_for('document.doc_temps'))
 # render_template('create_document.html', signature_form=signature_form, templates=templates)
-
+# Gitにpush出来ないので、変更します。
