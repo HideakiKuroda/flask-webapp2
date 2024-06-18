@@ -10,3 +10,20 @@
     {% endfor %}  
 {% endif %}
 {% endmacro %}  
+
+
+<!-- {% macro render_field(field) %}
+  <div class="form-group">
+    {{ field.label(class="form-label", for=field.id) }}
+    <div class="form-control-wrap">
+      {{ field(class="form-control", id=field.id, **kwargs) }}
+      {% if field.errors %}
+        <ul class="errors">
+          {% for error in field.errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </div>
+{% endmacro %} -->

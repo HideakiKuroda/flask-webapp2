@@ -32,7 +32,8 @@
 						<h5 class="card-title">{{ template.name }}</h5>
 						<p class="card-text">No.:{{ template.doc_code }}</p>
 						<!-- <a href="{{ url_for('document.download', doc_template_id=template.id ) }}" class="btn btn-primary">書類を作成</a> -->
-						<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createDocumentModal">
+						<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createDocumentModal"
+						data-template-name="{{ template.name }}" data-template-doc-code="{{ template.doc_code }}" data-template-id="{{ template.id }}">
 							書類を作成
 						</button>
 					</div>
@@ -53,31 +54,12 @@
 			<!-- <div class="position-sticky" style="top: 2rem;"> -->
 				<!-- 検索欄 -->
 				<div class="container-fluid mb-3">
-					<form action="{{ url_for('document.search')}}" class="d-flex" method="POST">
-						{{ form.hidden_tag() }}
-						{{ render_field(form.searchtext, class="form-control me-2", placeholder="検索するテキスト入力") }}
-						{{ form.submit(class="btn btn-outline-success") }}
+					<form action="{{ url_for('document.search')}}" class="d-flex" method="POST" enctype="multipart/form-data">
+						{{ template_search_form.hidden_tag() }}
+						{{ render_field(template_search_form.searchtext, class="form-control me-2", placeholder="検索するテキスト入力") }}
+						{{ template_search_form.submit(class="btn btn-outline-success") }}
 					</form>
 				</div>
-
-				<div class="container-fluid mb-3">
-					<form action="#" class="" method="POST">
-						<div class="row">
-							<div class="col">
-							<select class="form-select" >
-
-								<option selected>Open this select menu</option>
-								<option value="1">One</option>
-								<option value="2">Two</option>
-								<option value="3">Three</option>
-							</select>
-						</div>
-						<div class="col">
-							<button type="button" class="btn btn-secondary">検索</button>
-						</div>
-					</form>
-				</div>
-				<!-- 会社情報 -->
 				<!-- カテゴリ一覧 -->
 				<div class="p-4 mb-2">
 					<h4 class="fst-italic">CATEGORY<span class="ms-2 fs-6">カテゴリ一覧</span></h4>
@@ -110,7 +92,6 @@
 			</div> 
 		</div> <!-- Side Bar end-->
 	</div>   <!--  <div class="row mb-2"></div> -->
-
 	<!-- pagination -->
 	<div class="row mb-2">
 		<nav class="my-2" aria-label="Page navigation">
@@ -138,46 +119,76 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="createDocumentModalLabel">書類作成</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                    <form method="POST">
+                    <form method="post" action="{{ url_for('document.create_document') }}" >
+						{{ signature_form.hidden_tag() }}
                         <div class="modal-body">
-                            {{ form.hidden_tag() }}
-                            <div class="form-group">
+                            <div class="form-group px-3">
                                 <label for="doc_code">書類のコード</label>
-                                <select id="doc_code" name="doc_code" class="form-control" required>
-                                    <option value="">選択してください</option>
-                                    {% for template in templates %}
-                                        <option value="{{ template.doc_code }}">{{ template.name }} - {{ template.doc_code }}</option>
-                                    {% endfor %}
-                                </select>
+								<input type="text" class="form-control" id="template-doc-code" readonly>
+								<label for="doc_code">書類名</label>
+								<input type="text" class="form-control" id="template-name" readonly>
+								{{ signature_form.template_id(class_="d-none") }}
+							</div>
+                            <div class="form-group px-3 py-1">
+                                {{ render_field(signature_form.signature,class="form-control me-2", placeholder="名前を入力してください") }}
+							</div>
+                            <div id="select-wrapper" class="form-group  w-auto px-3">
+    							{{ render_field(signature_form.ship_id, id="select2",class_="form-control", placeholder="船前を選択してください") }}
                             </div>
-                            <div class="form-group">
-                                <label for="searchtext">署名</label>
-                                {{ form.searchtext(class="form-control") }}
-                            </div>
-                            <div class="form-group">
-                                <label for="ship_id">船名</label>
-                                <select id="ship_id" name="ship_id" class="select2_01, form-control" required>
-                                    <option value="">選択してください</option>
-									<option value="1">おふゆ</option>
-									<option value="2">そうや</option>
-									<option value="3">まみや</option>
-									<option value="4">つがる</option>
-									<option value="5">北野丸</option>
-							  	</select>
-                            </div>
+							<!-- <div id="select-wrapper" class="form-group  w-auto px-3">
+								{{ signature_form.ship_id.label(class="form-label") }}
+								<select id="select2"  aria-label="Default select example">
+									<option selected>Open this select menu</option>
+									{% for ship in ships %}
+									<option value="{{ ship.id }}">{{ ship.name }}</option>
+									{% endfor %}
+								</select>
+								{{ signature_form.ship_id() }}
+							</div> -->
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                            {{ form.submit(class="btn btn-primary") }}
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            {{ signature_form.submit(class="btn btn-primary") }}
                         </div>
                     </form>
                 </div>
             </div>
         </div>
-    </div>
-
+		<script>
+			$('#select2').select2({
+			dropdownParent: $("#select-wrapper"),
+			})
+			$(function() {
+			  $('#createDocumentModal').on('show.bs.modal', function(event) {
+				var button = $(event.relatedTarget); // モーダルを起動したボタン
+				var templateName = button.data('template-name'); // テンプレート名
+				var templateDocCode = button.data('template-doc-code'); // ドキュメントコード
+				var templateId = button.data('template-id'); // テンプレートID
+			
+				// モーダル内のフィールドにデータを設定
+				$('#template-name').val(templateName);
+				$('#template-doc-code').val(templateDocCode);
+				$('#template-id').val(templateId);
+				document.getElementById('{{ signature_form.template_id.id }}').value =  templateId;
+			  });
+			});
+			// JavaScriptでselect2の選択値をsignature_form.ship_idに設定
+			// function setTemplateId(value) {
+			// 	document.getElementById('{{ signature_form.template_id.id }}').value =  templateId;
+			// }
+			</script>
+			<head>
+				<style>
+				  .select2-container {
+						width: 430px !important;
+					}
+					/* .modal {
+						z-index: 1050 !important;
+					}	 */
+				</style>
+			</head>
 {% endblock %}
