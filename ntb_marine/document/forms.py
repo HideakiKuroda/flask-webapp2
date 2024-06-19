@@ -14,8 +14,6 @@ class SignatureForm(FlaskForm):
     template_id = IntegerField(validators=[DataRequired(), NumberRange(min=1, message="有効なテンプレートIDがありません")])
     signature = StringField('署名', validators=[DataRequired(message="署名を入力してください")])
     submit = SubmitField('書類作成')
-    temp_file_path = StringField('temp_file_path')
-    document_id = IntegerField('document_id')    
 
 # class SignatureForm(FlaskForm):
 #     ship_id = IntegerField('船名',validators=[DataRequired(), NumberRange(min=1, message="船名を選択してください")])

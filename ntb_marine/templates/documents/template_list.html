@@ -132,8 +132,8 @@
 								<label for="doc_code">書類名</label>
 								<input type="text" class="form-control" id="template-name" readonly>
 								{{ signature_form.template_id(class_="d-none") }}
-								{{ signature_form.temp_file_path(class_="d-none", id="temp_file_path") }}
-								{{ signature_form.document_id(class_="d-none", id="document_id") }}
+								<input type="file" name="temp_file_path" id="temp_file_path" style="display: none;">
+								<input type="number" name="document_id" id="document_id" style="display: none;">
 							</div>
                             <div class="form-group px-3 py-1">
                                 {{ render_field(signature_form.signature,class="form-control me-2", placeholder="名前を入力してください") }}

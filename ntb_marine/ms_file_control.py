@@ -33,7 +33,7 @@ def upload_file_to_sharepoint(file, auth, app_config):
         else:
             return None, 500
 
-def upload_edited_files(file, auth, app_config):
+def upload_edited_files(file_content,file_name, auth, app_config):
     try:
         token_response = auth.get_token_for_user(app_config.SCOPE)
         if not token_response:
@@ -43,10 +43,6 @@ def upload_edited_files(file, auth, app_config):
             'Authorization': 'Bearer ' + token_response['access_token'],
             'Content-Type': 'application/octet-stream'
         }
-        file_name = file.filename
-        file_content = file.read()
-        file.seek(0)
-
         endpoint = f'https://graph.microsoft.com/v1.0/sites/{app_config.site_id}/drive/items/{app_config.Edited_Files}:/{file_name}:/content'
 
         response = requests.put(endpoint, headers=headers, data=file_content)
@@ -54,7 +50,7 @@ def upload_edited_files(file, auth, app_config):
         if response.status_code in (200, 201):
             file_info = response.json()
             file_id = file_info['id']
-            return file_id, None
+            return file_id, response.status_code
         else:
             return None, response.status_code
     except Exception as e:

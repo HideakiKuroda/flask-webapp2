@@ -150,9 +150,8 @@ def create_document():
                 with open(temp_file_path, 'wb') as f:
                     f.write(file_content.getvalue())
                 # 一時的なファイルパスをrequest.formに代入
-                signature_form.temp_file_path.data = temp_file_path
-                signature_form.document_id.data = document.id
-                print(f"ここから{signature_form.temp_file_path.data}")    
+                session['temp_file_path'] = temp_file_path
+                session['document_id'] = document.id
                 # response = make_response(file_content.getvalue())
                 # response.headers.set('Content-Disposition', 'attachment', filename=file_name)
                 # response.headers.set('Content-Type', mime_type)
@@ -168,27 +167,27 @@ def create_document():
 @document.route("/upload_temp_file", methods=["POST"])
 def upload_temp_file():
     # try:
-        signature_form = SignatureForm()
-        print("ここから")
-		# 一時的なファイルを読み込む
-        temp_file_path = signature_form.temp_file_path.data
-        print(f"temp_file_path: {temp_file_path}")
-        document_id =  signature_form.document_id.data
-        with open(temp_file_path, 'rb') as f:
-            file_name = f
-        # file_name = os.path.basename(temp_file_path)
-        print(f"temp_file_path: {temp_file_path}")
-
+        # 一時的なファイルを読み込む
+        temp_file_path = session.get('temp_file_path')
+        document_id =  session.get('document_id')
+        form_data = request.form.to_dict()  # request.formを辞書型に変換する
+        form_data["temp_file_path"] = temp_file_path
+        form_data["document_id"] = document_id
+        signature_form = SignatureForm(form_data=form_data)
         document = Document.query.filter_by(id=document_id).first_or_404()
+        file_name = os.path.basename(temp_file_path)
+        with open(temp_file_path, 'rb') as file:
+            file_content = file.read()
+            file_id, status_code = ms_file_control.upload_edited_files(file_content, file_name, auth, app_config)
+            print(f' file_id:{file_id}')
         # SharePointにファイルをアップロード
-        response = ms_file_control.upload_edited_files(file_name, auth, app_config)
-        document.file_id = response.get('id')
+        document.file_id = file_id
         db.session.commit()
-        if response.get('status_code') == 201:
+        if status_code == 201:
             flash("ファイルが正常にアップロードされました。")
         else:
-            flash("ファイルのアップロードに失敗しました。")
-        return response
+            flash(f"ファイルのアップロードに失敗しました。{status_code}")
+        return status_code
     # except Exception as e:
     #     print(f"Error in upload_file_to_sharepoint: {e}")
     #     return None, 500
