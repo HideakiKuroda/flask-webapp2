@@ -1,0 +1,22 @@
+<form method="post" action="{{ url_for('document.create_document') }}" >
+	{{ signature_form.hidden_tag() }}
+	<div class="modal-body">
+		<div class="form-group px-3">
+			<label for="doc_code">書類のコード</label>
+			<input type="text" class="form-control" id="template-doc-code" readonly>
+			<label for="doc_code">書類名</label>
+			<input type="text" class="form-control" id="template-name" readonly>
+			{{ signature_form.template_id(class_="d-none") }}
+		</div>
+		<div class="form-group px-3 py-1">
+			{{ render_field(signature_form.signature,class="form-control me-2", placeholder="名前を入力してください") }}
+		</div>
+		<div id="select-wrapper" class="form-group  w-auto px-3">
+			{{ render_field(signature_form.ship_id, id="select2",class_="form-control", placeholder="船前を選択してください") }}
+		</div>
+	</div>
+	<div class="modal-footer">
+		<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+		{{ signature_form.submit(class="btn btn-primary") }}
+	</div>
+</form>

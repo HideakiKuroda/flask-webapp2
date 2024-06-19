@@ -21,7 +21,40 @@ def upload_file_to_sharepoint(file, auth, app_config):
         response = requests.put(endpoint, headers=headers, data=file_content)
 
         if response.status_code in (200, 201):
-            return response.json(), response.status_code
+            file_info = response.json()
+            file_id = file_info['id']
+            return file_id, None
+        else:
+            return None, response.status_code
+    except Exception as e:
+        print(f"Error in upload_file_to_sharepoint: {e}")
+        if 'response' in locals():
+            return None, response.status_code
+        else:
+            return None, 500
+
+def upload_edited_files(file, auth, app_config):
+    try:
+        token_response = auth.get_token_for_user(app_config.SCOPE)
+        if not token_response:
+            return None, 401
+
+        headers = {
+            'Authorization': 'Bearer ' + token_response['access_token'],
+            'Content-Type': 'application/octet-stream'
+        }
+        file_name = file.filename
+        file_content = file.read()
+        file.seek(0)
+
+        endpoint = f'https://graph.microsoft.com/v1.0/sites/{app_config.site_id}/drive/items/{app_config.Edited_Files}:/{file_name}:/content'
+
+        response = requests.put(endpoint, headers=headers, data=file_content)
+
+        if response.status_code in (200, 201):
+            file_info = response.json()
+            file_id = file_info['id']
+            return file_id, None
         else:
             return None, response.status_code
     except Exception as e:
@@ -50,7 +83,9 @@ def upload_file_to_specific_folder(file, folder_id, auth, app_config):
         response = requests.put(endpoint, headers=headers, data=file_content)
         
         if response.status_code in (200, 201):
-            return response.json()
+            file_info = response.json()
+            file_id = file_info['id']
+            return file_id
         else:
             return None
     except Exception as e:

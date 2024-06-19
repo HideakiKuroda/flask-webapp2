@@ -132,6 +132,8 @@
 								<label for="doc_code">書類名</label>
 								<input type="text" class="form-control" id="template-name" readonly>
 								{{ signature_form.template_id(class_="d-none") }}
+								{{ signature_form.temp_file_path(class_="d-none", id="temp_file_path") }}
+								{{ signature_form.document_id(class_="d-none", id="document_id") }}
 							</div>
                             <div class="form-group px-3 py-1">
                                 {{ render_field(signature_form.signature,class="form-control me-2", placeholder="名前を入力してください") }}
@@ -139,19 +141,9 @@
                             <div id="select-wrapper" class="form-group  w-auto px-3">
     							{{ render_field(signature_form.ship_id, id="select2",class_="form-control", placeholder="船前を選択してください") }}
                             </div>
-							<!-- <div id="select-wrapper" class="form-group  w-auto px-3">
-								{{ signature_form.ship_id.label(class="form-label") }}
-								<select id="select2"  aria-label="Default select example">
-									<option selected>Open this select menu</option>
-									{% for ship in ships %}
-									<option value="{{ ship.id }}">{{ ship.name }}</option>
-									{% endfor %}
-								</select>
-								{{ signature_form.ship_id() }}
-							</div> -->
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="executeMethod()">Close</button>
                             {{ signature_form.submit(class="btn btn-primary") }}
                         </div>
                     </form>
@@ -180,6 +172,27 @@
 			// function setTemplateId(value) {
 			// 	document.getElementById('{{ signature_form.template_id.id }}').value =  templateId;
 			// }
+			function executeMethod() {
+			    // フォームからデータを取得する
+			const temp_file_path = document.getElementById('temp_file_path').value;
+    		const document_id = document.getElementById('document_id').value;
+
+			const formData = new FormData();
+			formData.append('temp_file_path', temp_file_path);
+			formData.append('document_id', document_id);
+
+			fetch('/upload_temp_file', {
+				method: 'POST',
+				body: formData,
+			})
+			.then(response => response.json())
+			.then(data => {
+				// レスポンスを処理するコードをここに追加
+			})
+			.catch(error => {
+				console.error('Error:', error);
+			});
+			}
 			</script>
 			<head>
 				<style>

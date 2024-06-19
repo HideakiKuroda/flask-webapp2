@@ -1,4 +1,4 @@
-from flask import render_template, request, url_for, redirect, flash, send_file, abort,make_response
+from flask import render_template, request, url_for, redirect, flash, send_file, abort,make_response,send_from_directory,session
 from flask import Blueprint
 from flask_login import login_required, current_user
 from ntb_marine import app_config, auth, __version__, app, ms_file_control, db
@@ -7,6 +7,8 @@ from flask_wtf import FlaskForm
 from ntb_marine.document.forms import TemplateSearchForm, SignatureForm
 from io import BytesIO
 import datetime
+from tempfile import gettempdir
+import os
 
 document = Blueprint('document', __name__)
 
@@ -138,17 +140,55 @@ def create_document():
                     mime_type = 'application/msword'
                 else:
                     mime_type = 'application/octet-stream'  # デフォルトのMIMEタイプ                # response = send_file(file_content, as_attachment=False, download_name=file_name)
-                file_name = f"ID_{document.id}_{datetime.datetime.now().strftime('%Y%m%d')}_{template.doc_code}..{file_extension}"
+                file_name = f"S_{document.ship_id}_{datetime.datetime.now().strftime('%Y%m%d')}_{template.doc_code}.{file_extension}"
                 document.file_name = file_name  # Documentオブジェクトのfile_nameを更新
                 db.session.commit()  # Documentオブジェクトを更新してコミット
 
                 # send_fileを使用して適切なHTTPヘッダーを設定
-                response = make_response(file_content.getvalue())
-                response.headers.set('Content-Disposition', 'attachment', filename=file_name)
-                response.headers.set('Content-Type', mime_type)
-                return response
+                temp_folder = gettempdir()
+                temp_file_path = os.path.join(temp_folder, file_name)
+                with open(temp_file_path, 'wb') as f:
+                    f.write(file_content.getvalue())
+                # 一時的なファイルパスをrequest.formに代入
+                signature_form.temp_file_path.data = temp_file_path
+                signature_form.document_id.data = document.id
+                print(f"ここから{signature_form.temp_file_path.data}")    
+                # response = make_response(file_content.getvalue())
+                # response.headers.set('Content-Disposition', 'attachment', filename=file_name)
+                # response.headers.set('Content-Type', mime_type)
+                return send_from_directory(temp_folder, file_name, as_attachment=True)
             else:
                 return abort(status_code)
-    return  redirect(url_for('document.doc_temps'))
+    return  temp_file_path
 # render_template('create_document.html', signature_form=signature_form, templates=templates)
 # Gitにpush出来ないので、変更します。
+# exfilename = session.get('filename')
+# session['date'] = request.form['date']
+
+@document.route("/upload_temp_file", methods=["POST"])
+def upload_temp_file():
+    # try:
+        signature_form = SignatureForm()
+        print("ここから")
+		# 一時的なファイルを読み込む
+        temp_file_path = signature_form.temp_file_path.data
+        print(f"temp_file_path: {temp_file_path}")
+        document_id =  signature_form.document_id.data
+        with open(temp_file_path, 'rb') as f:
+            file_name = f
+        # file_name = os.path.basename(temp_file_path)
+        print(f"temp_file_path: {temp_file_path}")
+
+        document = Document.query.filter_by(id=document_id).first_or_404()
+        # SharePointにファイルをアップロード
+        response = ms_file_control.upload_edited_files(file_name, auth, app_config)
+        document.file_id = response.get('id')
+        db.session.commit()
+        if response.get('status_code') == 201:
+            flash("ファイルが正常にアップロードされました。")
+        else:
+            flash("ファイルのアップロードに失敗しました。")
+        return response
+    # except Exception as e:
+    #     print(f"Error in upload_file_to_sharepoint: {e}")
+    #     return None, 500

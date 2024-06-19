@@ -1,8 +1,10 @@
-from flask import render_template, request, url_for, redirect, flash, send_file, abort
+from flask import render_template, request, url_for, redirect, flash, send_file, abort,send_from_directory
 from flask import Blueprint
 from ntb_marine import app_config, auth, __version__, app
 from ntb_marine import ms_file_control 
 import requests
+from tempfile import gettempdir,NamedTemporaryFile
+import os
 
 file_control = Blueprint('file_control', __name__)
 
@@ -21,12 +23,27 @@ def upload():
 
         if file:
             result = ms_file_control.upload_file_to_sharepoint(file, auth, app_config)
+            # result = ms_file_control.upload_edited_files(file, auth, app_config)
             if result:
-                flash("ファイルが正常にアップロードされました。")
+                flash(f"ファイルが正常にアップロードされました。{result}")
             else:
                 flash("ファイルのアップロードに失敗しました。")
             return redirect(url_for("logins.index"))
     return render_template("file_control/upload.html", username=auth.get_user()["name"])
+
+# @file_control.route("/upload_temp_file", methods=["POST"])
+# def upload_temp_file():
+#     # 一時的なファイルを読み込む
+#     temp_file_path = request.form.get('temp_file_path')
+#     with open(temp_file_path, 'rb') as f:
+#         file_name = f
+#     # SharePointにファイルをアップロード
+#     result = ms_file_control.upload_file_to_sharepoint(file_name, auth, app_config)
+#     if result:
+#         flash(f"ファイルが正常にアップロードされました。{result}")
+#     else:
+#         flash("ファイルのアップロードに失敗しました。")
+#     return result
 
 @file_control.route("/list_files", methods=["GET"])
 @file_control.route("/list_files/<folder_id>", methods=["GET"])
@@ -36,12 +53,27 @@ def list_files(folder_id=None):
         return  status
     return render_template("file_control/file_list.html", files=files, folders=folders)
 
+# @file_control.route("/download/<file_id>/<file_name>", methods=["GET"])
+# def download_file(file_id, file_name):
+#     file_content, status = ms_file_control.download_file(file_id, auth, app_config)
+#     if status!= 200:
+#         return  status
+#     return send_file(file_content, as_attachment=True, download_name=file_name)
+
 @file_control.route("/download/<file_id>/<file_name>", methods=["GET"])
 def download_file(file_id, file_name):
     file_content, status = ms_file_control.download_file(file_id, auth, app_config)
-    if status!= 200:
-        return  status
-    return send_file(file_content, as_attachment=True, download_name=file_name)
+    if status != 200:
+        return status
+
+    # 一時的なファイルを作成して保存
+    temp_folder = gettempdir()
+    temp_file_path = os.path.join(temp_folder, file_name)
+    with open(temp_file_path, 'wb') as f:
+        f.write(file_content.getvalue())
+
+    # send_from_directory関数を使用してファイルをダウンロード
+    return send_from_directory(temp_folder, file_name, as_attachment=True)
 
 @file_control.route("/create_folder", methods=["POST","GET"])
 def create_folder():
