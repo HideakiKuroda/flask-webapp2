@@ -16,7 +16,7 @@ from ntb_marine.seeder.seed_data_dept_assignments import deptAssignmentsSeeder
 from ntb_marine.seeder.seed_data_ship_owners import ship_ownersSeeder
 with app.app_context():
     # Document.__table__.drop(db.engine)
-    Document.__table__.create(db.engine)
+    # Document.__table__.create(db.engine)
 
     # db.drop_table('users')
     # db.drop_all()

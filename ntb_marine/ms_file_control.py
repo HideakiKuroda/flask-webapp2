@@ -55,7 +55,7 @@ def upload_edited_files(file_content,file_name, auth, app_config):
         else:
             return None, response.status_code
     except Exception as e:
-        print(f"Error in upload_file_to_sharepoint: {e}")
+        print(f"Error in upload_edited_files: {e}")
         if 'response' in locals():
             return None, response.status_code
         else:

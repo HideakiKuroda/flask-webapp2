@@ -122,25 +122,20 @@ def create_document():
                 file_name = f"ID_{document.id}_{document.ship_id}_{datetime.datetime.now().strftime('%Y%m%d')}_{template.doc_code}.{file_extension}"
                 document.file_name = file_name  # Documentオブジェクトのfile_nameを更新
                 db.session.commit()  # Documentオブジェクトを更新してコミット
+
+                # PCのダウンロードフォルダとファイル名をつなげてdownload_file_path　アップロード時に必要
                 home_dir = os.path.expanduser("~")
                 download_folder = os.path.join(home_dir, 'Downloads')
                 download_file_path = os.path.join(download_folder, file_name)
-                
-                with open(download_file_path, 'wb') as f:
+
+                temp_folder = gettempdir()
+                temp_file_path = os.path.join(temp_folder, file_name)
+                with open(temp_file_path, 'wb') as f:
                     f.write(file_content.getvalue())
                 # 一時的なファイルパスをrequest.formに代入
                 session['temp_file_path'] = download_file_path
                 session['document_id'] = document.id
-                # print(f'temp_file_path:{download_file_path}')
-                return redirect(url_for('document.download_document', file_name=file_name))
-
-                # return send_from_directory(download_folder, file_name, as_attachment=True, cache_timeout=0)
-                # return send_file(download_file_path, as_attachment=True, download_name=file_name)
-                # return send_file(download_file_path, as_attachment=True, mimetype='application/octet-stream')
-                # response = make_response(send_from_directory(download_folder, file_name, as_attachment=True))
-                # response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-                # response.headers["Pragma"] = "no-cache"
-                # response.headers["Expires"] = "0"
+                return send_from_directory(temp_folder, file_name, as_attachment=True)
             else:
                 return abort(status_code)
     return status_code
@@ -149,16 +144,9 @@ def create_document():
 # exfilename = session.get('filename')
 # session['date'] = request.form['date']
 
-@document.route('/download_document/<file_name>')
-def download_document(file_name):
-    home_dir = os.path.expanduser("~")
-    download_folder = os.path.join(home_dir, 'Downloads')
-    download_file_path = os.path.join(download_folder, file_name)
-    return send_file(download_file_path, as_attachment=True, download_name=file_name)
-
 @document.route("/upload_temp_file", methods=["POST"])
 def upload_temp_file():
-    try:
+    # try:
         # 一時的なファイルを読み込む
         temp_file_path = session.get('temp_file_path')
         document_id =  session.get('document_id')
@@ -168,10 +156,10 @@ def upload_temp_file():
         # signature_form = SignatureForm(form_data=form_data)
         document = Document.query.filter_by(id=document_id).first_or_404()
         file_name = os.path.basename(temp_file_path)
+        # print(f' file_name:{file_name}')
         with open(temp_file_path, 'rb') as file:
             file_content = file.read()
             file_id, status_code = ms_file_control.upload_edited_files(file_content, file_name, auth, app_config)
-            # print(f' file_id:{file_id}')
         # SharePointにファイルをアップロード
         document.file_id = file_id
         db.session.commit()
@@ -183,6 +171,6 @@ def upload_temp_file():
             response = {"message": f"ファイルのアップロードに失敗しました。{status_code}"}
         # print(f'ここは？ file_id:{file_id}')    
         return response
-    except Exception as e:
-        print(f"Error in upload_temp_file: {e}")
-        return 500
+    # except Exception as e:
+    #     print(f"Error in upload_temp_file: {e}")
+    #     return 500
