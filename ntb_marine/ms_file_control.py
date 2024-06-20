@@ -1,6 +1,7 @@
 import requests
 from flask import flash, redirect, url_for
 from io import BytesIO
+import re
 
 def upload_file_to_sharepoint(file, auth, app_config):
     try:
@@ -189,3 +190,16 @@ def user_info(auth, app_config=None):
     user_info = response.json()
 
     return user_info    
+
+# ファイル名からIDを抽出する関数
+def id_from_filename(filename):
+    # 正規表現を使って、ID_数字_ の形式にマッチングする部分を探す
+    match = re.search(r'ID_(\d+)_', filename)
+
+    if match:
+        # マッチングした部分を整数に変換して返す
+        id_num = int(match.group(1))
+        return id_num
+    else:
+        # マッチングしなかった場合はエラーを発生させる
+        raise ValueError(f"Invalid filename format: {filename}")

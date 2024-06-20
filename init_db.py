@@ -1,4 +1,5 @@
-from ntb_marine import db , app
+from ntb_marine import db , app 
+from ntb_marine.models import Document
 # from ship_management.models import User,UserDescription,Department,DeptAssignment,Ship,ShipAssignment,ShipAttachment,OperatSection,NavigationArea,Summary,Summary2,ShipOwner,Concerned,ProCategory,TaskCategory,Project,Task,ProAttachment,ProAssignment,TaskAttachment,ProDescription,TakDescription,Role,UserHasRoles,Schedule
 from ntb_marine.models import Concerned
 from ntb_marine.seeder.seed_data_concerneds import concernedsSeeder
@@ -13,9 +14,10 @@ from ntb_marine.seeder.seed_data_doc_templates import doc_templatesSeeder
 from ntb_marine.seeder.seed_data_departments import departmentsSeeder
 from ntb_marine.seeder.seed_data_dept_assignments import deptAssignmentsSeeder
 from ntb_marine.seeder.seed_data_ship_owners import ship_ownersSeeder
-
 with app.app_context():
-    # db.drop_table('dec_templates')
+    # Document.__table__.drop(db.engine)
+    Document.__table__.create(db.engine)
+
     # db.drop_table('users')
     # db.drop_all()
     # db.create_all()
@@ -31,6 +33,6 @@ with app.app_context():
     # doc_templatesSeeder()
     # departmentsSeeder()
     # deptAssignmentsSeeder()
-    ship_ownersSeeder()
+    # ship_ownersSeeder()
 
     db.session.commit()

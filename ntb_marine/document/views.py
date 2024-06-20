@@ -25,28 +25,6 @@ def doc_temps():
     # 選択肢を設定
     signature_form.ship_id.choices = [(0, "船名を選択して下さい")] + [(ship.id, ship.name) for ship in ships]
 
-    # if signature_form.validate_on_submit():
-    #         template = DocTemplate.query.filter_by(id=signature_form.template_id.data).first_or_404()
-    #         if template:
-    #             document = Document(
-    #                 doc_code=template.doc_code, name=template.name,
-    #                 file_category_id=template.file_category_id, signature=signature_form.signature.data,
-    #                 ship_id=signature_form.ship_id.data
-    #             )
-    #             db.session.add(document)
-    #             db.session.commit()
-    #             file_content, status_code = ms_file_control.download_file(template.file_id, auth, app_config)
-    #             if status_code == 200:
-    #                 file_name = f"ID_{document.id}_{datetime.datetime.now().strftime('%Y%m%d')}_{template.doc_code}.{template.file_name.split('.')[-1]}"
-    #                 document.file_name = file_name
-    #                 db.session.commit()
-    #                 response = send_file(file_content, as_attachment=True, download_name=file_name)
-    #                 return response
-    #             else:
-    #                 return abort(status_code)
-    # else:
-    #     print(signature_form.errors)
-
     return render_template('documents/template_list.html', signature_form=signature_form, ships=ships, doc_templates=doc_templates, file_categories=file_categories,template_search_form=template_search_form,current_user=current_user, version=__version__)
 
 @document.route('/<int:file_category_id>/category_posts>')
@@ -97,10 +75,19 @@ def search():
 @login_required
 def download(doc_template_id):
     doc_template = DocTemplate.query.filter_by(id=doc_template_id).first_or_404()
+    file_name = doc_template.name
     file_content, status = ms_file_control.download_file(doc_template.file_id, auth, app_config)
-    if status!= 200:
-        return  status
-    return send_file(file_content, as_attachment=True, download_name=doc_template.file_name)
+    if status != 200:
+        return status
+    # 一時的なファイルを作成して保存
+    temp_folder = gettempdir()
+    temp_file_path = os.path.join(temp_folder, file_name)
+    with open(temp_file_path, 'wb') as f:
+        f.write(file_content.getvalue())
+
+    # send_from_directory関数を使用してファイルをダウンロード
+    return send_from_directory(temp_folder, file_name, as_attachment=True)
+
 
 @document.route('/create_document', methods=['GET', 'POST'])
 def create_document():
@@ -132,62 +119,70 @@ def create_document():
             # print(f"ファイルID: {template.file_id}")
             if status_code == 200:
                 file_extension = template.file_name.split('.')[-1]
-                if file_extension == 'xlsx':
-                    mime_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                elif file_extension == 'docx':
-                    mime_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                elif file_extension == 'doc':
-                    mime_type = 'application/msword'
-                else:
-                    mime_type = 'application/octet-stream'  # デフォルトのMIMEタイプ                # response = send_file(file_content, as_attachment=False, download_name=file_name)
-                file_name = f"S_{document.ship_id}_{datetime.datetime.now().strftime('%Y%m%d')}_{template.doc_code}.{file_extension}"
+                file_name = f"ID_{document.id}_{document.ship_id}_{datetime.datetime.now().strftime('%Y%m%d')}_{template.doc_code}.{file_extension}"
                 document.file_name = file_name  # Documentオブジェクトのfile_nameを更新
                 db.session.commit()  # Documentオブジェクトを更新してコミット
-
-                # send_fileを使用して適切なHTTPヘッダーを設定
-                temp_folder = gettempdir()
-                temp_file_path = os.path.join(temp_folder, file_name)
-                with open(temp_file_path, 'wb') as f:
+                home_dir = os.path.expanduser("~")
+                download_folder = os.path.join(home_dir, 'Downloads')
+                download_file_path = os.path.join(download_folder, file_name)
+                
+                with open(download_file_path, 'wb') as f:
                     f.write(file_content.getvalue())
                 # 一時的なファイルパスをrequest.formに代入
-                session['temp_file_path'] = temp_file_path
+                session['temp_file_path'] = download_file_path
                 session['document_id'] = document.id
-                # response = make_response(file_content.getvalue())
-                # response.headers.set('Content-Disposition', 'attachment', filename=file_name)
-                # response.headers.set('Content-Type', mime_type)
-                return send_from_directory(temp_folder, file_name, as_attachment=True)
+                # print(f'temp_file_path:{download_file_path}')
+                return redirect(url_for('document.download_document', file_name=file_name))
+
+                # return send_from_directory(download_folder, file_name, as_attachment=True, cache_timeout=0)
+                # return send_file(download_file_path, as_attachment=True, download_name=file_name)
+                # return send_file(download_file_path, as_attachment=True, mimetype='application/octet-stream')
+                # response = make_response(send_from_directory(download_folder, file_name, as_attachment=True))
+                # response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+                # response.headers["Pragma"] = "no-cache"
+                # response.headers["Expires"] = "0"
             else:
                 return abort(status_code)
-    return  temp_file_path
+    return status_code
 # render_template('create_document.html', signature_form=signature_form, templates=templates)
 # Gitにpush出来ないので、変更します。
 # exfilename = session.get('filename')
 # session['date'] = request.form['date']
 
+@document.route('/download_document/<file_name>')
+def download_document(file_name):
+    home_dir = os.path.expanduser("~")
+    download_folder = os.path.join(home_dir, 'Downloads')
+    download_file_path = os.path.join(download_folder, file_name)
+    return send_file(download_file_path, as_attachment=True, download_name=file_name)
+
 @document.route("/upload_temp_file", methods=["POST"])
 def upload_temp_file():
-    # try:
+    try:
         # 一時的なファイルを読み込む
         temp_file_path = session.get('temp_file_path')
         document_id =  session.get('document_id')
         form_data = request.form.to_dict()  # request.formを辞書型に変換する
         form_data["temp_file_path"] = temp_file_path
         form_data["document_id"] = document_id
-        signature_form = SignatureForm(form_data=form_data)
+        # signature_form = SignatureForm(form_data=form_data)
         document = Document.query.filter_by(id=document_id).first_or_404()
         file_name = os.path.basename(temp_file_path)
         with open(temp_file_path, 'rb') as file:
             file_content = file.read()
             file_id, status_code = ms_file_control.upload_edited_files(file_content, file_name, auth, app_config)
-            print(f' file_id:{file_id}')
+            # print(f' file_id:{file_id}')
         # SharePointにファイルをアップロード
         document.file_id = file_id
         db.session.commit()
         if status_code == 201:
-            flash("ファイルが正常にアップロードされました。")
+            # flash("ファイルが正常にアップロードされました。")
+            response = {"message": "ファイルが正常にアップロードされました。"}
         else:
-            flash(f"ファイルのアップロードに失敗しました。{status_code}")
-        return status_code
-    # except Exception as e:
-    #     print(f"Error in upload_file_to_sharepoint: {e}")
-    #     return None, 500
+            # flash(f"ファイルのアップロードに失敗しました。{status_code}")
+            response = {"message": f"ファイルのアップロードに失敗しました。{status_code}"}
+        # print(f'ここは？ file_id:{file_id}')    
+        return response
+    except Exception as e:
+        print(f"Error in upload_temp_file: {e}")
+        return 500
