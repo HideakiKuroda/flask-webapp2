@@ -1,22 +1,64 @@
-<form method="post" action="{{ url_for('document.create_document') }}" >
-	{{ signature_form.hidden_tag() }}
-	<div class="modal-body">
-		<div class="form-group px-3">
-			<label for="doc_code">書類のコード</label>
-			<input type="text" class="form-control" id="template-doc-code" readonly>
-			<label for="doc_code">書類名</label>
-			<input type="text" class="form-control" id="template-name" readonly>
-			{{ signature_form.template_id(class_="d-none") }}
-		</div>
-		<div class="form-group px-3 py-1">
-			{{ render_field(signature_form.signature,class="form-control me-2", placeholder="名前を入力してください") }}
-		</div>
-		<div id="select-wrapper" class="form-group  w-auto px-3">
-			{{ render_field(signature_form.ship_id, id="select2",class_="form-control", placeholder="船前を選択してください") }}
+<div class="col-sm-3 mb-2">
+	<div class="card">
+		<div class="card-body" style="max-height: 26rem;">
+
+			<div class="mb-2" style="text-align: center;">
+ 				<img src="#"  class="img-fluid card-img-top" style="max-height: 10rem; width: 50%;">
+			</div>						
+			
+			<h5 class="card-title">{{ template.name }}</h5>
+			<p class="card-text">No.:{{ template.doc_code }}</p>
+			<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createDocumentModal"
+				data-template-name="{{ template.name }}" data-template-doc-code="{{ template.doc_code }}" data-template-id="{{ template.id }}">
+				書類を作成
+			</button>
 		</div>
 	</div>
-	<div class="modal-footer">
-		<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-		{{ signature_form.submit(class="btn btn-primary") }}
+</div>
+
+<div class="col-12 col-sm-3 mb-2">
+	<div class="card">
+	  <div class="card-body" style="max-height: 26rem;">
+
+		<div class="d-flex flex-column">
+		  <div class="mb-2 flex-shrink-0" style="text-align: center;">
+			<img src="#" class="w-100" style="max-height: 10rem;">
+		  </div>
+
+		  <div>
+			<h5 class="card-title">{{ template.name }}</h5>
+			<p class="card-text">No.:{{ template.doc_code }}</p>
+			<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createDocumentModal"
+			  data-template-name="{{ template.name }}" data-template-doc-code="{{ template.doc_code }}" data-template-id="{{ template.id }}">
+			  書類を作成
+			</button>
+		  </div>
+		</div>
+	  </div>
 	</div>
-</form>
+  </div>
+
+  <div class="col-12 col-sm-3 mb-2">
+	<div class="card">
+		<div class="card-body" style="max-height: 26rem;">
+
+			<div class="d-flex flex-column">
+				<div class="mb-2 flex-shrink-0" style="text-align: center;">
+				{% if template.file_name.endswith('.xlsx') %}
+					<img src="{{ url_for('static', filename='/Excel/Excel-1.png')}}" class="w-100" style="max-height: 10rem;">
+				{% elif template.file_name.endswith('.docx') %}
+					<img src="{{ url_for('static', filename='/Word/Word-1.png')}}" class="w-100" style="max-height: 10rem;">
+				{% endif %}
+				</div>						
+			<diV>
+			<h5 class="card-title">{{ template.name }}</h5>
+				<p class="card-text">No.:{{ template.doc_code }}</p>
+				<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createDocumentModal"
+					data-template-name="{{ template.name }}" data-template-doc-code="{{ template.doc_code }}" data-template-id="{{ template.id }}">
+					書類を作成
+				</button>
+			</diV>
+		</div>
+	</div>
+	</div>
+</div>

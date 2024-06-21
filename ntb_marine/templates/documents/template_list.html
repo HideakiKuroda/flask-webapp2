@@ -20,23 +20,23 @@
 				<div class="row">
 					{% for template in doc_templates.items %}
 					<div class="col-sm-3 mb-2">
-					<div class="card">
-						<div class="card-body">
-							<div class="mb-2" style="text-align: center;">
-								{% if template.file_name.endswith('.xlsx') %}
-									<img src="{{ url_for('static', filename='/Excel/Excel-1.png')}}"  class="img-fluid card-img-top" style="max-height: 10rem; width: 50%;">
-								{% elif template.file_name.endswith('.docx') %}
-									<img src="{{ url_for('static', filename='/Word/Word-1.png')}}"  class="img-fluid card-img-top" style="max-height: 10rem; width: 50%;">
-								{% endif %}
-							</div>						
-						<h5 class="card-title">{{ template.name }}</h5>
-						<p class="card-text">No.:{{ template.doc_code }}</p>
-						<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createDocumentModal"
-						data-template-name="{{ template.name }}" data-template-doc-code="{{ template.doc_code }}" data-template-id="{{ template.id }}">
-							書類を作成
-						</button>
-					</div>
-					</div>
+						<div class="card">
+							<div class="card-body" style="max-height: 26rem;">
+								<div class="mb-2" style="text-align: center;">
+									{% if template.file_name.endswith('.xlsx') %}
+										<img src="{{ url_for('static', filename='/Excel/Excel-1.png')}}"  class="img-fluid card-img-top" style="max-height: 10rem; width: 50%;">
+									{% elif template.file_name.endswith('.docx') %}
+										<img src="{{ url_for('static', filename='/Word/Word-1.png')}}"  class="img-fluid card-img-top" style="max-height: 10rem; width: 50%;">
+									{% endif %}
+								</div>						
+								<h5 class="card-title">{{ template.name }}</h5>
+								<p class="card-text">No.:{{ template.doc_code }}</p>
+								<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createDocumentModal"
+									data-template-name="{{ template.name }}" data-template-doc-code="{{ template.doc_code }}" data-template-id="{{ template.id }}">
+									書類を作成
+								</button>
+							</div>
+						</div>
 					</div>
 					{% endfor %}	
 				</div>	
@@ -52,18 +52,33 @@
 			<div class="sticky-top">
 			<!-- <div class="position-sticky" style="top: 2rem;"> -->
 				<!-- 検索欄 -->
-				<div class="container-fluid mb-3">
-					<form action="{{ url_for('document.search')}}" class="d-flex" method="POST" >
+				<!-- <div class="container-fluid mb-3"> -->
+					<div class="p-2 mb-2">
+						<h5 class="fst-italic">DCOCUMENT SEARCH<span class="ms-2 fs-6">検索</span></h5>
+						<hr>
+						<form action="{{ url_for('document.search')}}" class="d-flex" method="POST" >
 						{{ template_search_form.hidden_tag() }}
 						<div class="d-flex align-items-end">
 						{{ render_field(template_search_form.searchtext, class="form-control me-2", placeholder="検索するテキスト入力") }}
 						{{ template_search_form.submit(class="btn btn-outline-success h-52") }}
 						</div>
-					</form>
-				</div>
+						</form>
+					</div>
+				<div class="p-2 mb-2">
+					<h5 class="fst-italic">UPLOAD FILE<span class="ms-2 fs-6">手動でアップする</span></h5>
+					<hr>
+					<form method="POST" enctype="multipart/form-data" action="#">
+					<div class="input-group">
+						<input type="file" class="form-control" id="inputGroupFile04" name="file1">
+					  	<button class="btn btn-success" type="submit">
+							送信
+					  </button>
+					</div>
+				  </form>
+				</div>  
 				<!-- カテゴリ一覧 -->
-				<div class="p-4 mb-2">
-					<h4 class="fst-italic">CATEGORY<span class="ms-2 fs-6">カテゴリ一覧</span></h4>
+				<div class="p-2 mb-2">
+					<h5 class="fst-italic">CATEGORY<span class="ms-2 fs-6">カテゴリ一覧</span></h5>
 					<hr>
 					<ol class="list-unstyled">
 						{% for category in file_categories %}
@@ -77,19 +92,27 @@
 					</ol>
 				</div>                
 				<!-- 最新記事 -->
-				<div class="p-4 mb-2">
-					<h4 class="fst-italic">RECENT POST<span class="ms-2 fs-6">最新記事</span></h4>
+				<div class="p-2 mb-2">
+					<h5 class="fst-italic">RECENT POST<span class="ms-2 fs-6">最近の書類</span></h5>
 					<hr>
 					<ol class="list-unstyled">
+						{% for recent_doc in edited_docs %}
 						<li>
 							<a href="#" class="text-decoration-none">
-								<img src="#" class="img-fluid" width="90" height="50">
-								<span class="ms-2"></span>
+								{% if recent_doc.file_name.endswith('.xlsx') %}
+								<img src="{{ url_for('static', filename='/Excel/Excel-1.png')}}"  class="img-fluid" width="90" height="50">
+								{% elif recent_doc.file_name.endswith('.docx') %}
+								<img src="{{ url_for('static', filename='/Word/Word-1.png')}}"  class="img-fluid" width="90" height="50">
+								{% endif %}
+								<span class="ms-2">{{ recent_doc.doc_code }}</span>
+								<span class="ms-2">{{ recent_doc.name }}</span>
 							</a>
 						</li>
 						<hr>
+						{% endfor %}
 					</ol>
 				</div>
+			<!-- </div> -->
 			</div> 
 		</div> <!-- Side Bar end-->
 	</div>   <!--  <div class="row mb-2"></div> -->
@@ -170,14 +193,20 @@
 				document.getElementById('{{ signature_form.template_id.id }}').value =  templateId;
 			  });
 			});
+			
 			// JavaScriptでselect2の選択値をsignature_form.ship_idに設定
 			// function setTemplateId(value) {
 			// 	document.getElementById('{{ signature_form.template_id.id }}').value =  templateId;
 			// }
+			function fixEdgePath(path) {
+				return path.replace(/\\\\/g, '\\');
+			}
 			function executeMethod() {
 			    // フォームからデータを取得する
-			const temp_file_path = document.getElementById('temp_file_path').value;
-    		const document_id = document.getElementById('document_id').value;
+			let temp_file_path = document.getElementById('temp_file_path').value;
+    		let document_id = document.getElementById('document_id').value;
+			temp_file_path = fixEdgePath(temp_file_path);
+			console.log("Corrected temp_file_path:", temp_file_path);
 
 			const formData = new FormData();
 			formData.append('temp_file_path', temp_file_path);
@@ -200,10 +229,6 @@
 				console.error('Error:', error);
 			});
 			}
-			// モーダルが閉じられたときに親画面をリロードする
-			document.getElementById('uploadModal').addEventListener('hide.bs.modal', function () {
-				window.location.reload();
-			});
 			</script>
 			<!-- <head>
 				<style>
