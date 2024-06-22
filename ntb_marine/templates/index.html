@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="index">
+  <div class="container my-5">
+      <div class="row">
+          <div class="col-lg-4 text-left">
+
+            <h4>メニュー</h2>
+
+            <ul>
+            {% if config.get("ENDPOINT") %}
+              <li><a class="text-xl-start fs-5" href='/call_downstream_api'>Call a downstream API</a></li>
+            {% endif %}
+
+            <li><a class="text-xl-start fs-5"  href="{{ url_for('file_control.upload') }}">Upload</a></li>
+            <li><a class="text-xl-start fs-5"  href="{{ url_for('file_control.create_folder') }}">Make Folder</a></li>
+            </ul>
+
+            <hr>
+          </div>
+      </div>
+  </div>
+</section>
+{% endblock %}
+

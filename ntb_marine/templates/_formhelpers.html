@@ -1,0 +1,29 @@
+<!-- マクロのファイル -->
+{% macro render_field(field) %}
+{{ field(**kwargs)|safe }}  
+<!--**kwargs は複数の引数を受け取ることができる  |safe これはエスケープ処理せずそのままに　jinja2の機能で変数に対してフィルターを適用   
+    変数 | フィルター名  https://jinja.palletsprojects.com/en/3.0.x/templates/#builtin-filters-->
+{% if field.errors %}
+    <br>
+    {% for error in field.errors %}
+        {{ error }}
+    {% endfor %}  
+{% endif %}
+{% endmacro %}  
+
+
+<!-- {% macro render_field(field) %}
+  <div class="form-group">
+    {{ field.label(class="form-label", for=field.id) }}
+    <div class="form-control-wrap">
+      {{ field(class="form-control", id=field.id, **kwargs) }}
+      {% if field.errors %}
+        <ul class="errors">
+          {% for error in field.errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </div>
+{% endmacro %} -->
