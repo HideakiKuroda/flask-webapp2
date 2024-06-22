@@ -7,20 +7,39 @@ import requests
 from flask_login import login_user, LoginManager,login_user, logout_user, login_required, current_user 
 
 logins = Blueprint('logins', __name__)
-
 login_manager = LoginManager() #インスタンス化
 login_manager.init_app(app)  #appとログイン機能を紐づけ
+
+import functools
+def login_required(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if not auth.get_user():
+            return redirect(url_for("logins.login", next=request.path))
+        return func(*args, **kwargs)
+    return wrapper
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# @logins.route("/login")
+# def login():
+#     return render_template("users/login.html", version=__version__, **auth.log_in(
+#         scopes=app_config.SCOPE,
+#         redirect_uri=url_for("logins.auth_response", _external=True),
+#         prompt="select_account",
+#     ))
 
 @logins.route("/login")
 def login():
+    next_url = request.args.get("next")
+    if not next_url or not next_url.startswith("/"):
+        next_url = url_for("logins.index")
+
     return render_template("users/login.html", version=__version__, **auth.log_in(
         scopes=app_config.SCOPE,
-        redirect_uri=url_for("logins.auth_response", _external=True),
+        redirect_uri=url_for("logins.auth_response", _external=True, next=next_url),
         prompt="select_account",
     ))
 
@@ -49,7 +68,10 @@ def auth_response():
     login_user(user)
     # print(f"ユーザーID: {user.id}")
 
-    return redirect(url_for("logins.index"))
+    next_url = request.args.get("next")
+    if not next_url or not next_url.startswith("/"):
+        next_url = url_for("logins.index")
+    return redirect(next_url)
 
 @logins.route("/logout")
 @login_required
@@ -58,11 +80,12 @@ def logout():
     return redirect(auth.log_out(url_for("logins.index", _external=True)))
 
 @logins.route("/")
+@login_required
 def index():
     if not (app.config["CLIENT_ID"] and app.config["CLIENT_SECRET"]):
         return render_template('config_error.html')
-    if not auth.get_user():
-        return redirect(url_for("logins.login"))
+    # if not auth.get_user():
+    #     return redirect(url_for("logins.login"))
     # user_info = ms_file_control.user_info(auth, app_config)
     # username = user_info["displayName"]
     # mail = user_info["mail"]

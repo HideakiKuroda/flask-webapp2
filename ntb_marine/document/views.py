@@ -10,8 +10,17 @@ from os.path import normpath
 import datetime
 from tempfile import gettempdir
 import os 
+import functools
 
 document = Blueprint('document', __name__)
+
+def login_required(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if not auth.get_user():
+            return redirect(url_for("logins.login", next=request.path))
+        return func(*args, **kwargs)
+    return wrapper
 
 @document.route("/doc_temps", methods=["GET", "POST"])
 @login_required
@@ -94,6 +103,7 @@ def download(doc_template_id):
 
 
 @document.route('/create_document', methods=['GET', 'POST'])
+@login_required
 def create_document():
     signature_form = SignatureForm()
     ships = Ship.query.all()
