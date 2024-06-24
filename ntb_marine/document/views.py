@@ -4,13 +4,14 @@ from flask_login import login_required, current_user
 from ntb_marine import app_config, auth, __version__, app, ms_file_control, db
 from ntb_marine.models import DocTemplate, FileCategory, Document, Ship
 from flask_wtf import FlaskForm
-from ntb_marine.document.forms import TemplateSearchForm, SignatureForm
+from ntb_marine.document.forms import TemplateSearchForm, SignatureForm,EditedSearchForm
 from io import BytesIO
 from os.path import normpath
-import datetime
+from datetime import datetime
 from tempfile import gettempdir
 import os 
 import functools
+from sqlalchemy.sql import or_
 
 document = Blueprint('document', __name__)
 
@@ -21,68 +22,64 @@ def login_required(func):
             return redirect(url_for("logins.login", next=request.path))
         return func(*args, **kwargs)
     return wrapper
+def get_common_data():
+    template_search_form = TemplateSearchForm()
+    signature_form = SignatureForm()
+    # 船の一覧を取得
+    ships = Ship.query.all()
+    edited_docs = Document.query.filter(Document.file_id.is_not(None)).order_by(Document.updated_at.desc()).limit(5).all()
+    # 選択肢を設定
+    signature_form.ship_id.choices = [(0, "船名を選択して下さい")] + [(ship.id, ship.name) for ship in ships]
+    file_categories = FileCategory.query.order_by(FileCategory.id.asc()).all()
+    return {
+        'template_search_form': template_search_form,
+        'signature_form': signature_form,
+        'ships': ships,
+        'edited_docs': edited_docs,
+        'file_categories': file_categories,
+        'current_user': current_user,
+        'version': __version__
+    }
 
 @document.route("/doc_temps", methods=["GET", "POST"])
 @login_required
 def doc_temps():
-    template_search_form = TemplateSearchForm()
-    signature_form = SignatureForm()
+    common_data = get_common_data()
+    # paginateの記述    
     page = request.args.get('page', 1, type=int)
     doc_templates = DocTemplate.query.order_by(DocTemplate.id.desc()).paginate(page=page, per_page=12)
-    file_categories = FileCategory.query.order_by(FileCategory.id.asc()).all()
-    # 船の一覧を取得
-    ships = Ship.query.all()
-    edited_docs = Document.query.filter(Document.file_id.is_not(None)).order_by(Document.updated_at.desc()).limit(5).all()
-    # 選択肢を設定
-    signature_form.ship_id.choices = [(0, "船名を選択して下さい")] + [(ship.id, ship.name) for ship in ships]
 
-    return render_template('documents/template_list.html', edited_docs= edited_docs, signature_form=signature_form, ships=ships, doc_templates=doc_templates, file_categories=file_categories,template_search_form=template_search_form,current_user=current_user, version=__version__)
+    return render_template('documents/template_list.html', **common_data, doc_templates=doc_templates)
 
 @document.route('/<int:file_category_id>/category_posts>')
 @login_required
 def category_posts(file_category_id):
-    template_search_form = TemplateSearchForm()
-    signature_form = SignatureForm()
-    # 船の一覧を取得
-    ships = Ship.query.all()
-    edited_docs = Document.query.filter(Document.file_id.is_not(None)).order_by(Document.updated_at.desc()).limit(5).all()
-    # 選択肢を設定
-    signature_form.ship_id.choices = [(0, "船名を選択して下さい")] + [(ship.id, ship.name) for ship in ships]
+    common_data = get_common_data()
     # カテゴリ名を取得
     file_category = FileCategory.query.filter_by(id=file_category_id).first_or_404()
-
-    # テンプレートの取得
+    common_data['file_category'] = file_category
+    # paginateの記述    
     page = request.args.get('page', 1, type=int)
+    # テンプレートの取得
     doc_templates = DocTemplate.query.filter_by(file_category_id=file_category_id).order_by(DocTemplate.id.desc()).paginate(page=page, per_page=12)
-    file_categories = FileCategory.query.order_by(FileCategory.id.asc()).all()
-    return render_template('documents/template_list.html', edited_docs= edited_docs, signature_form=signature_form, ships=ships, doc_templates=doc_templates, file_categories=file_categories, file_category=file_category, template_search_form=template_search_form,current_user=current_user, version=__version__)
+    return render_template('documents/template_list.html', **common_data, doc_templates=doc_templates)
 
 @document.route('/search', methods=['GET','POST'])
 @login_required
 def search():
-    template_search_form = TemplateSearchForm()
-    signature_form = SignatureForm()
-    # 船の一覧を取得
-    edited_docs = Document.query.filter(Document.file_id.is_not(None)).order_by(Document.updated_at.desc()).limit(5).all()
-    ships = Ship.query.all()
-    # 選択肢を設定
-    signature_form.ship_id.choices = [(0, "船名を選択して下さい")] + [(ship.id, ship.name) for ship in ships]
+    common_data = get_common_data()
     searchtext = ""
-    if template_search_form.validate_on_submit():
-        searchtext = template_search_form.searchtext.data
+    if common_data['template_search_form'].validate_on_submit():
+        searchtext = common_data['template_search_form'].searchtext.data
     elif request.method == 'GET':
-        template_search_form.searchtext.data = ""
-#   ブログ記事の取得
+        common_data['template_search_form'].searchtext.data = ""
+    # テンプレートの取得
     page = request.args.get('page', 1, type=int)
     if searchtext == "" or searchtext is None:
         doc_templates = DocTemplate.query.order_by(DocTemplate.id.desc()).paginate(page=page, per_page=12)
     else:    
         doc_templates = DocTemplate.query.filter((DocTemplate.doc_code.contains(searchtext)) | (DocTemplate.name.contains(searchtext)) | DocTemplate.file_name.contains(searchtext)).order_by(DocTemplate.id.desc()).paginate(page=page, per_page=12)
-#   最新記事の取得
-    # recent_blog_posts = BlogPost.query.order_by(BlogPost.id.desc()).limit(5).all()
-#   カテゴリの取得
-    file_categories = FileCategory.query.order_by(FileCategory.id.asc()).all()
-    return render_template('documents/template_list.html', edited_docs= edited_docs, signature_form=signature_form, ships=ships, doc_templates=doc_templates, file_categories=file_categories, template_search_form=template_search_form,current_user=current_user, version=__version__)
+    return render_template('documents/template_list.html', **common_data, doc_templates=doc_templates)
 
 @document.route('/<int:doc_template_id>/download')
 @login_required
@@ -180,3 +177,50 @@ def upload_temp_file():
     except Exception as e:
         print(f"Error in upload_temp_file: {e}")
         return 500
+
+@document.route("/edited_list", methods=["GET", "POST"])
+@login_required
+def edited_list():
+    edited_form = EditedSearchForm()    
+    common_data = get_common_data()
+    page = request.args.get('page', 1, type=int)
+    edited_list = Document.query.filter(Document.file_id.is_not(None)).order_by(Document.updated_at.desc()).paginate(page=page, per_page=12)
+    return render_template('documents/edited_list.html', **common_data, edited_list=edited_list, edited_form=edited_form)
+
+@document.route("/edited_serch", methods=["GET", "POST"])
+@login_required
+def edited_serch():
+    common_data = get_common_data()
+    edited_form = EditedSearchForm()  
+    page = request.args.get('page', 1, type=int)
+    searchdate = None  
+    searchtext = None 
+    if edited_form.validate_on_submit():
+        searchtext = edited_form.searchtext.data
+        searchdate = datetime.strptime(edited_form.searchdate.data, '%Y-%m')
+    elif request.method == 'GET':
+        edited_form.searchtext.data = ""
+        edited_form.searchdate.data = None
+
+    if searchdate is None:
+        if searchtext == "" or searchtext is None:
+            edited_list = Document.query.filter(Document.file_id.is_not(None)).order_by(Document.updated_at.desc()).paginate(page=page, per_page=12)
+        else:    
+            edited_list = Document.query.filter(Document.file_id.is_not(None))\
+            .filter(or_(Document.doc_code.contains(searchtext), Document.name.contains(searchtext), Document.file_name.contains(searchtext)))\
+            .order_by(Document.updated_at.desc()).paginate(page=page, per_page=12)
+    else:
+        serch_year = searchdate.year
+        serch_month = searchdate.month
+        start_date = datetime(serch_year, serch_month, 1)
+        end_date = datetime(serch_year, serch_month + 1, 1)
+        if searchtext == "" or searchtext is None:
+            edited_list = Document.query.filter(Document.file_id.is_not(None))\
+            .filter(Document.updated_at >= start_date, Document.updated_at < end_date)\
+            .order_by(Document.updated_at.desc()).paginate(page=page, per_page=12)
+        else:    
+            edited_list = Document.query.filter(Document.file_id.is_not(None))\
+            .filter(or_(Document.doc_code.contains(searchtext), Document.name.contains(searchtext), Document.file_name.contains(searchtext)))\
+            .filter(Document.updated_at >= start_date, Document.updated_at < end_date)\
+            .order_by(Document.updated_at.desc()).paginate(page=page, per_page=12)
+    return render_template('documents/edited_list.html', **common_data, edited_list=edited_list,edited_form=edited_form)

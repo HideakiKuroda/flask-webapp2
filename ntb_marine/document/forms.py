@@ -1,12 +1,17 @@
 from flask_wtf import FlaskForm
 from flask_wtf.form import _Auto
-from wtforms import StringField, SubmitField, ValidationError, TextAreaField,SelectField, IntegerField
-from wtforms.validators import DataRequired, NumberRange
+from wtforms import StringField, SubmitField, ValidationError, TextAreaField,SelectField, IntegerField, DateField
+from wtforms.validators import DataRequired, NumberRange, Optional
 from ntb_marine.models import FileCategory
 from flask_wtf.file import FileField, FileAllowed
 
 class TemplateSearchForm(FlaskForm):
     searchtext = StringField('')
+    submit = SubmitField('検索')
+
+class EditedSearchForm(FlaskForm):
+    searchtext = StringField('文書名で検索')
+    searchdate = StringField('月指定表示', validators=[Optional()])
     submit = SubmitField('検索')
 
 class SignatureForm(FlaskForm):

@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% block content %}
+<header id="page-header">
+	<dev class="container my-3 bg-light">
+		<div class="row">
+			<div class="col-md-6 m-auto text-center">
+					<h1 class="fst-italic">登録文書の一覧</h1>
+					<p>登録文書を再編集します</p>
+			</div>
+		</div>
+	</dev>
+</header>
+<!-- Page discription -->
+<div class="container my-3">
+	<div class="row mb-2">
+		<!-- content(Left) -->
+		<div class="col-8">
+		<!-- Blog Post -->
+			<section id="blog_post">
+				<div class="row">
+					{% for edited in edited_list.items %}
+					<div class="col-sm-3 mb-2">
+						<div class="card">
+							<div class="card-body" style="max-height: 26rem;">
+								<div class="mb-2" style="text-align: center;">
+									{% if edited.file_name.endswith('.xlsx') %}
+										<img src="{{ url_for('static', filename='/Excel/Excel-1.png')}}"  class="img-fluid card-img-top" style="max-height: 10rem; width: 50%;">
+									{% elif edited.file_name.endswith('.docx') %}
+										<img src="{{ url_for('static', filename='/Word/Word-1.png')}}"  class="img-fluid card-img-top" style="max-height: 10rem; width: 50%;">
+									{% endif %}
+								</div>						
+								<h5 class="card-title">{{ edited.name }}</h5>
+								<p class="card-text">No.:{{ edited.doc_code }}</p>
+								<p class="card-text">日付:{{ edited.updated_at }}</p>
+								<p class="card-text">署名:{{ edited.signature }}</p>
+								<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createDocumentModal"
+									data-template-name="{{ edited.name }}" data-template-doc-code="{{ edited.doc_code }}" data-template-id="{{ edited.id }}">
+									再編集
+								</button>
+							</div>
+						</div>
+					</div>
+					{% endfor %}	
+				</div>	
+			</section>
+		
+			<!-- メニュー  -->
+			<section id="menu">
+
+			</section>
+		</div>
+		<!-- Side Bar -->
+		<div class="col-md-4">
+			<div class="sticky-top">
+			<!-- <div class="position-sticky" style="top: 2rem;"> -->
+				<!-- 検索欄 -->
+				<!-- <div class="container-fluid mb-3"> -->
+					<div class="p-2 mb-2">
+						<h5 class="fst-italic">DCOCUMENT SEARCH<span class="ms-2 fs-6">検索</span></h5>
+						<hr>
+						<form action="{{ url_for('document.edited_serch')}}" class="d-flex" method="POST" >
+						{{ edited_form.hidden_tag() }}
+						<div class="d-flex align-items-end">
+						{{ render_field(edited_form.searchtext, class="form-control me-2", placeholder="検索するテキスト入力") }}
+						{{ render_field(edited_form.searchdate, type="month", class="form-control") }}
+						{{ edited_form.submit(class="btn btn-outline-success h-52") }}
+						</div>
+						</form>
+					</div>
+				<div class="p-2 mb-2">
+					<h5 class="fst-italic">UPLOAD FILE<span class="ms-2 fs-6">手動でアップする</span></h5>
+					<hr>
+					<form method="POST" enctype="multipart/form-data" action="#">
+					<div class="input-group">
+						<input type="file" class="form-control" id="inputGroupFile04" name="file1">
+					  	<button class="btn btn-success" type="submit">
+							送信
+					  </button>
+					</div>
+				  </form>
+				</div>  
+				<!-- カテゴリ一覧 -->
+				<div class="p-2 mb-2">
+					<h5 class="fst-italic">CATEGORY<span class="ms-2 fs-6">カテゴリ一覧</span></h5>
+					<hr>
+					<ol class="list-unstyled">
+						{% for category in file_categories %}
+						<li>
+							<a href="{{ url_for('document.category_posts', file_category_id=category.id ) }}" class="text-decoration-none">
+								<span class="ms-2">{{ category.name }}</span>
+							</a>
+						</li>
+						<hr>
+						{% endfor %}
+					</ol>
+				</div>                
+				<!-- 最新記事 -->
+				<div class="p-2 mb-2">
+					<h5 class="fst-italic">RECENT POST<span class="ms-2 fs-6">最近の書類</span></h5>
+					<hr>
+					<ol class="list-unstyled">
+						{% for recent_doc in edited_docs %}
+						<li>
+							<a href="#" class="text-decoration-none">
+								{% if recent_doc.file_name.endswith('.xlsx') %}
+								<img src="{{ url_for('static', filename='/Excel/Excel-1.png')}}"  class="img-fluid" width="90" height="50">
+								{% elif recent_doc.file_name.endswith('.docx') %}
+								<img src="{{ url_for('static', filename='/Word/Word-1.png')}}"  class="img-fluid" width="90" height="50">
+								{% endif %}
+								<span class="ms-2">{{ recent_doc.doc_code }}</span>
+								<span class="ms-2">{{ recent_doc.name }}</span>
+							</a>
+						</li>
+						<hr>
+						{% endfor %}
+					</ol>
+				</div>
+			<!-- </div> -->
+			</div> 
+		</div> <!-- Side Bar end-->
+	</div>   <!--  <div class="row mb-2"></div> -->
+	<!-- pagination -->
+	<div class="row mb-2">
+		<nav class="my-2" aria-label="Page navigation">
+			<ul class="pagination justify-content-center">
+			<li {% if edited_list.has_prev %}class="page-item"{% else %} class="page-item disabled"{% endif %}><a class="page-link" href="{% if edited_list.has_prev %}{{ url_for('document.doc_temps', page=edited_list.prev_num)}}{% else %}#{% endif %}">前へ</a></li>
+			{% for page_num in edited_list.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+				{% if page_num %}
+					{% if edited_list.page == page_num %}
+					<li class="page-item disabled"><a class="page-link" href="#">{{ page_num }}</a></li>
+					{% else %}
+					<li class="page-item"><a class="page-link" href="{{ url_for('document.doc_temps', page=page_num)}}">{{ page_num }}</a></li>            
+					{% endif %}
+				{% else %}
+				<li class="page-item disabled"><a class="page-link" href="#">&hellip;</a></li>
+				{% endif %}
+			{% endfor %}
+			<li {% if edited_list.has_next %}class="page-item"{% else %}class="page-item disabled"{% endif %}><a class="page-link" href="{% if edited_list.has_next %}{{ url_for('document.doc_temps', page=edited_list.next_num)}}{% else %}#{% endif %}">次へ</a></li>
+			</ul>
+		</nav>
+	</div> <!-- pagination -->
+</div>   <!-- <div class="container my-3"></div> -->
+       <!-- Modal -->
+        <div class="modal fade" id="createDocumentModal" tabindex="-1" role="dialog" aria-labelledby="createDocumentModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="createDocumentModalLabel">書類作成</h5>
+                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form method="post" action="{{ url_for('document.create_document') }}" >
+						{{ signature_form.hidden_tag() }}
+                        <div class="modal-body">
+                            <div class="form-group px-3">
+                                <label for="doc_code">書類のコード</label>
+								<input type="text" class="form-control" id="template-doc-code" readonly>
+								<label for="doc_code">書類名</label>
+								<input type="text" class="form-control" id="template-name" readonly>
+								{{ signature_form.template_id(class_="d-none") }}
+								<input type="file" name="temp_file_path" id="temp_file_path" style="display: none;">
+								<input type="number" name="document_id" id="document_id" style="display: none;">
+							</div>
+                            <div class="form-group px-3 py-1">
+                                {{ render_field(signature_form.signature,class="form-control me-2", placeholder="名前を入力してください") }}
+							</div>
+                            <div id="select-wrapper" class="form-group  w-auto px-3">
+    							{{ render_field(signature_form.ship_id, id="select2",class_="form-control", placeholder="船前を選択してください", style="width: 430px;") }}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >Close</button>
+                            <button type="button" class="btn btn-success" data-bs-dismiss="modal" onclick="executeMethod()">アップロード</button>
+                            {{ signature_form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+		<script>
+			$('#select2').select2({
+			dropdownParent: $("#select-wrapper"),
+			})
+			$(function() {
+			  $('#createDocumentModal').on('show.bs.modal', function(event) {
+				var button = $(event.relatedTarget); // モーダルを起動したボタン
+				var templateName = button.data('template-name'); // テンプレート名
+				var templateDocCode = button.data('template-doc-code'); // ドキュメントコード
+				var templateId = button.data('template-id'); // テンプレートID
+			
+				// モーダル内のフィールドにデータを設定
+				$('#template-name').val(templateName);
+				$('#template-doc-code').val(templateDocCode);
+				$('#template-id').val(templateId);
+				document.getElementById('{{ signature_form.template_id.id }}').value =  templateId;
+			  });
+			});
+			
+			// JavaScriptでselect2の選択値をsignature_form.ship_idに設定
+			// function setTemplateId(value) {
+			// 	document.getElementById('{{ signature_form.template_id.id }}').value =  templateId;
+			// }
+			function fixEdgePath(path) {
+				return path.replace(/\\\\/g, '\\');
+			}
+			function executeMethod() {
+			    // フォームからデータを取得する
+			let temp_file_path = document.getElementById('temp_file_path').value;
+    		let document_id = document.getElementById('document_id').value;
+			temp_file_path = fixEdgePath(temp_file_path);
+			console.log("Corrected temp_file_path:", temp_file_path);
+
+			const formData = new FormData();
+			formData.append('temp_file_path', temp_file_path);
+			formData.append('document_id', document_id);
+
+			fetch('/upload_temp_file', {
+				method: 'POST',
+				body: formData,
+			})
+			.then(response => response.json())
+			.then(data => {
+				if (data.message) {
+            		alert(data.message);  // メッセージを表示する（必要に応じて変更）
+				}
+				if (data.redirect) {
+					window.location.href = data.redirect;  // リダイレクトする
+				}
+			})
+			.catch(error => {
+				console.error('Error:', error);
+			});
+			}
+			</script>
+			<!-- <head>
+				<style>
+				  .select2-container {
+						width: 430px !important;
+					}
+					/* .modal {
+						z-index: 1050 !important;
+					}	 */
+				</style>
+			</head> -->
+{% endblock %}
