@@ -1,10 +1,10 @@
-from flask import render_template, request, url_for, redirect, flash, send_file, abort,send_from_directory
+from flask import render_template, request, url_for, redirect, flash, send_file, abort,send_from_directory,make_response
 from flask import Blueprint
 from ntb_marine import app_config, auth, __version__, app
 from ntb_marine import ms_file_control 
 import requests
-from tempfile import gettempdir,NamedTemporaryFile
 import os
+import mimetypes
 
 file_control = Blueprint('file_control', __name__)
 
@@ -60,21 +60,37 @@ def list_files(folder_id=None):
 #         return  status
 #     return send_file(file_content, as_attachment=True, download_name=file_name)
 
+# @file_control.route("/download/<file_id>/<file_name>", methods=["GET"])
+# def download_file(file_id, file_name):
+#     file_content, status = ms_file_control.download_file(file_id, auth, app_config)
+#     if status != 200:
+#         return status
+
+#     # 一時的なファイルを作成して保存
+#     temp_folder = gettempdir()
+#     temp_file_path = os.path.join(temp_folder, file_name)
+#     with open(temp_file_path, 'wb') as f:
+#         f.write(file_content.getvalue())
+
+#     # send_from_directory関数を使用してファイルをダウンロード
+#     return send_from_directory(temp_folder, file_name, as_attachment=True)
+
 @file_control.route("/download/<file_id>/<file_name>", methods=["GET"])
 def download_file(file_id, file_name):
     file_content, status = ms_file_control.download_file(file_id, auth, app_config)
     if status != 200:
         return status
 
-    # 一時的なファイルを作成して保存
-    temp_folder = gettempdir()
-    temp_file_path = os.path.join(temp_folder, file_name)
-    with open(temp_file_path, 'wb') as f:
-        f.write(file_content.getvalue())
-
-    # send_from_directory関数を使用してファイルをダウンロード
-    return send_from_directory(temp_folder, file_name, as_attachment=True)
-
+    # ファイルのMIME型を取得
+    mime_type = mimetypes.guess_type(file_name)[0] or 'application/octet-stream'
+    # send_file関数を使用してファイルをダウンロード
+    return send_file(
+        file_content,
+        as_attachment = True, 
+        download_name=file_name,  
+        mimetype=mime_type,
+    )
+    
 @file_control.route("/create_folder", methods=["POST","GET"])
 def create_folder():
     folder_name = request.form.get("folder_name")

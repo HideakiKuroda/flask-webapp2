@@ -67,9 +67,9 @@
 				<div class="p-2 mb-2">
 					<h5 class="fst-italic">UPLOAD FILE<span class="ms-2 fs-6">手動でアップする</span></h5>
 					<hr>
-					<form method="POST" enctype="multipart/form-data" action="#">
+					<form action="{{ url_for('document.select_upload') }}" method="POST" enctype="multipart/form-data">
 					<div class="input-group">
-						<input type="file" class="form-control" id="inputGroupFile04" name="file1">
+						<input type="file" class="form-control" id="inputGroupFile04" name="file">
 					  	<button class="btn btn-success" type="submit">
 							送信
 					  </button>

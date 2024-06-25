@@ -12,6 +12,7 @@ from tempfile import gettempdir
 import os 
 import functools
 from sqlalchemy.sql import or_
+import mimetypes
 
 document = Blueprint('document', __name__)
 
@@ -122,8 +123,9 @@ def create_document():
 
             file_content, status_code = ms_file_control.download_file(template.file_id, auth, app_config)
             if status_code == 200:
+                mime_type = mimetypes.guess_type(template.file_name)[0] or 'application/octet-stream'
                 file_extension = template.file_name.split('.')[-1]
-                file_name = f"ID_{document.id}_{document.ship_id}_{datetime.datetime.now().strftime('%Y%m%d')}_{template.doc_code}.{file_extension}"
+                file_name = f"ID_{document.id}_{document.ship_id}_{datetime.now().strftime('%Y%m%d')}_{template.doc_code}.{file_extension}"
                 document.file_name = file_name  # Documentオブジェクトのfile_nameを更新
                 db.session.commit()  # Documentオブジェクトを更新してコミット
                 # PCのダウンロードフォルダとファイル名をつなげてdownload_file_path　アップロード時に必要
@@ -131,14 +133,15 @@ def create_document():
                 download_folder = os.path.join(home_dir, 'Downloads')
                 download_file_path = os.path.join(download_folder, file_name)
                 
-                temp_folder = gettempdir()
-                temp_file_path = os.path.join(temp_folder, file_name)
-                with open(temp_file_path, 'wb') as f:
-                    f.write(file_content.getvalue())
                 # ダウンロードしたファイル名&パスをsessionに代入
                 session['temp_file_path'] = download_file_path
                 session['document_id'] = document.id
-                return send_from_directory(temp_folder, file_name, as_attachment=True)
+                return send_file(
+                    file_content,
+                    mimetype=mime_type,
+                    as_attachment=True,
+                    download_name=file_name
+                )            
             else:
                 return abort(status_code)
     return status_code
@@ -146,6 +149,8 @@ def create_document():
 # Gitにpush出来ないので、変更します。
 # exfilename = session.get('filename')
 # session['date'] = request.form['date']
+
+
 
 @document.route("/upload_temp_file", methods=["POST"])
 def upload_temp_file():
@@ -224,3 +229,57 @@ def edited_serch():
             .filter(Document.updated_at >= start_date, Document.updated_at < end_date)\
             .order_by(Document.updated_at.desc()).paginate(page=page, per_page=12)
     return render_template('documents/edited_list.html', **common_data, edited_list=edited_list,edited_form=edited_form)
+
+# 主導でのファイルUpload
+@document.route("/select_upload", methods=["GET", "POST"])
+def select_upload():
+    common_data = get_common_data()
+    page = request.args.get('page', 1, type=int)
+    doc_templates = DocTemplate.query.order_by(DocTemplate.id.desc()).paginate(page=page, per_page=12)
+    if request.method == "POST":
+        if "file" not in request.files:
+            flash("ファイルが選択されていません。")
+            return redirect(request.url)
+        
+        file = request.files["file"]
+        file_name = file.filename
+        file_content = file.read()
+        
+        if file.filename == "":
+            flash("ファイルが選択されていません。")
+            return redirect(request.url)
+
+        if file:
+            result = ms_file_control.upload_edited_files(file_content, file_name, auth, app_config)
+            if result:
+                flash("ファイルが正常にアップロードされました。")
+            else:
+                flash("ファイルのアップロードに失敗しました。")
+                return redirect(request.url)
+    return render_template('documents/template_list.html', **common_data, doc_templates=doc_templates)
+
+
+
+# ダウンロードのテスト用
+@document.route('/make_response', methods=['GET', 'POST'])
+@login_required
+def make_response():
+    signature_form = SignatureForm()
+    ships = Ship.query.all()
+    signature_form.ship_id.choices = [(0, "船名を選択して下さい")] + [(ship.id, ship.name) for ship in ships]
+ 
+    if request.method == 'POST':
+        template = DocTemplate.query.filter_by(id=signature_form.template_id.data).first_or_404()
+
+        file_content, status_code = ms_file_control.download_file(template.file_id, auth, app_config)
+        if status_code == 200:
+            mime_type = mimetypes.guess_type(template.file_name)[0] or 'application/octet-stream'
+            file_extension = template.file_name.split('.')[-1]
+            file_name = f"ID_{datetime.now().strftime('%Y%m%d')}_{template.doc_code}.{file_extension}"
+            
+    return send_file(
+        file_content,
+        mimetype=mime_type,
+        as_attachment=True,
+        download_name=file_name
+    )

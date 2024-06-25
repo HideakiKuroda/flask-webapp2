@@ -121,16 +121,12 @@ def download_file(file_id, auth, app_config):
     token_response = auth.get_token_for_user(app_config.SCOPE)
     if not token_response:
         return None, 401
-
     headers = {
         'Authorization': 'Bearer ' + token_response['access_token'],
         'Accept': 'application/octet-stream'
     }
-
     endpoint = f'https://graph.microsoft.com/v1.0/sites/{app_config.site_id}/drive/items/{file_id}/content'
-    
     response = requests.get(endpoint, headers=headers, stream=True)
-    
     if response.status_code == 200:
         return BytesIO(response.content),  response.status_code
     else:
