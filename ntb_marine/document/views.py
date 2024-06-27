@@ -13,8 +13,21 @@ import os
 import functools
 from sqlalchemy.sql import or_
 import mimetypes
+from pytz import timezone
 
 document = Blueprint('document', __name__)
+
+# カスタムフィルタを定義
+@app.template_filter('format_datetime')
+def format_datetime(value):
+    if value is None:
+        return ""
+    # 日付を "年-月-日" 形式にフォーマット
+    return value.strftime('%Y年%m月%d日')
+
+# アプリケーションにフィルタを登録
+app.jinja_env.filters['format_datetime'] = format_datetime
+#設置方法： <p class="card-text">日付:{{ edited.updated_at | format_datetime  }}</p>
 
 def login_required(func):
     @functools.wraps(func)
@@ -150,8 +163,6 @@ def create_document():
 # exfilename = session.get('filename')
 # session['date'] = request.form['date']
 
-
-
 @document.route("/upload_temp_file", methods=["POST"])
 def upload_temp_file():
     try:
@@ -161,6 +172,9 @@ def upload_temp_file():
         form_data = request.form.to_dict()  # request.formを辞書型に変換する
         form_data["temp_file_path"] = temp_file_path
         form_data["document_id"] = document_id
+        common_data = get_common_data()
+        page = request.args.get('page', 1, type=int)
+        doc_templates = DocTemplate.query.order_by(DocTemplate.id.desc()).paginate(page=page, per_page=12)
         # signature_form = SignatureForm(form_data=form_data)
         document = Document.query.filter_by(id=document_id).first_or_404()
         # print('>>>5')
@@ -172,16 +186,63 @@ def upload_temp_file():
         document.file_id = file_id
         db.session.commit()
         if status_code == 201:
-            # flash("ファイルが正常にアップロードされました。")
-            response = {"message": "ファイルが正常にアップロードされました。"}
+            flash("ファイルが正常にアップロードされました。")
         else:
-            # flash(f"ファイルのアップロードに失敗しました。{status_code}")
-            response = {"message": f"ファイルのアップロードに失敗しました。{status_code}"}
+            flash(f"ファイルのアップロードに失敗しました。{status_code}")
         # print(f'ここは？ file_id:{file_id}')    
-        return response
+        return render_template('documents/template_list.html', **common_data, doc_templates=doc_templates)
     except Exception as e:
         print(f"Error in upload_temp_file: {e}")
         return 500
+
+def id_of_document(file_name):
+    # ID_ と _ の間の数字を取得
+    id_part = file_name.split("ID_")[1].split("_")[0]
+
+    # 数字を整数型に変換して返す
+    return int(id_part)
+# 手動でのファイルUpload
+@document.route("/select_upload", methods=["GET", "POST"])
+def select_upload():
+    common_data = get_common_data()
+    page = request.args.get('page', 1, type=int)
+    doc_templates = DocTemplate.query.order_by(DocTemplate.id.desc()).paginate(page=page, per_page=12)
+    if request.method == "POST":
+        if "file" not in request.files:
+            flash("ファイルが選択されていません。")
+            return redirect(request.url)
+        
+        file = request.files["file"]
+        file_name = file.filename
+        file_content = file.read()
+        if file.filename == "":
+            flash("ファイルが選択されていません。")
+            return redirect(request.url)
+        try:
+            document_id = id_of_document(file_name)
+        except ValueError as e:
+            flash(f"このファイルはアップロードできません。: {e}")
+            return redirect(request.url)
+        
+        document = Document.query.filter_by(id=document_id).first()
+        if document is None:
+            flash("このドキュメントが見つかりません。選択したファイルはデータがありませんでした。")
+            return redirect(request.url)
+        if file:
+            file_id, status_code = ms_file_control.upload_edited_files(file_content, file_name, auth, app_config)
+            if status_code in [200, 201]:
+                document.file_id = file_id
+                print(f'file_id:{file_id}')
+                updateat =datetime.now(timezone('Asia/Tokyo'))
+                document.update_at = updateat
+                print(f'更新日:{updateat}')
+                db.session.commit()
+                flash(f"ファイルが正常にアップロードされました。{status_code}")
+            else:
+                flash(f"ファイルのアップロードに失敗しました。{status_code}")
+                return redirect(request.url)
+    return render_template('documents/template_list.html', **common_data, doc_templates=doc_templates)
+
 
 @document.route("/edited_list", methods=["GET", "POST"])
 @login_required
@@ -229,36 +290,6 @@ def edited_serch():
             .filter(Document.updated_at >= start_date, Document.updated_at < end_date)\
             .order_by(Document.updated_at.desc()).paginate(page=page, per_page=12)
     return render_template('documents/edited_list.html', **common_data, edited_list=edited_list,edited_form=edited_form)
-
-# 主導でのファイルUpload
-@document.route("/select_upload", methods=["GET", "POST"])
-def select_upload():
-    common_data = get_common_data()
-    page = request.args.get('page', 1, type=int)
-    doc_templates = DocTemplate.query.order_by(DocTemplate.id.desc()).paginate(page=page, per_page=12)
-    if request.method == "POST":
-        if "file" not in request.files:
-            flash("ファイルが選択されていません。")
-            return redirect(request.url)
-        
-        file = request.files["file"]
-        file_name = file.filename
-        file_content = file.read()
-        
-        if file.filename == "":
-            flash("ファイルが選択されていません。")
-            return redirect(request.url)
-
-        if file:
-            result = ms_file_control.upload_edited_files(file_content, file_name, auth, app_config)
-            if result:
-                flash("ファイルが正常にアップロードされました。")
-            else:
-                flash("ファイルのアップロードに失敗しました。")
-                return redirect(request.url)
-    return render_template('documents/template_list.html', **common_data, doc_templates=doc_templates)
-
-
 
 # ダウンロードのテスト用
 @document.route('/make_response', methods=['GET', 'POST'])

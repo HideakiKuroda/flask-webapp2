@@ -31,7 +31,7 @@
 								</div>						
 								<h5 class="card-title">{{ edited.name }}</h5>
 								<p class="card-text">No.:{{ edited.doc_code }}</p>
-								<p class="card-text">日付:{{ edited.updated_at }}</p>
+								<p class="card-text">日付:{{ edited.updated_at | format_datetime  }}</p>
 								<p class="card-text">署名:{{ edited.signature }}</p>
 								<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createDocumentModal"
 									data-template-name="{{ edited.name }}" data-template-doc-code="{{ edited.doc_code }}" data-template-id="{{ edited.id }}">

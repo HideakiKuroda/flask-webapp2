@@ -19,7 +19,9 @@ class TimestampMixin(object):
         return Column(
             DateTime, default=datetime.now(timezone('Asia/Tokyo')), onupdate=datetime.now(timezone('Asia/Tokyo')), nullable=False
         )
-
+def update_timestamp(mapper, connection, target):
+    target.updated_at = datetime.now(timezone('Asia/Tokyo'))
+    
 class User(db.Model,TimestampMixin,UserMixin):
     __tablename__ = 'users' 
     id = db.Column(db.Integer, primary_key = True)
