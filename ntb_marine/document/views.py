@@ -185,7 +185,7 @@ def upload_temp_file():
         # SharePointにファイルをアップロード
         document.file_id = file_id
         db.session.commit()
-        if status_code == 201:
+        if status_code in [200, 201]:
             flash("ファイルが正常にアップロードされました。")
         else:
             flash(f"ファイルのアップロードに失敗しました。{status_code}")
@@ -231,10 +231,11 @@ def select_upload():
         if file:
             file_id, status_code = ms_file_control.upload_edited_files(file_content, file_name, auth, app_config)
             if status_code in [200, 201]:
+                document.file_id = None
+                db.session.commit()
                 document.file_id = file_id
-                print(f'file_id:{file_id}')
+                # print(f'file_id:{file_id}')
                 updateat =datetime.now(timezone('Asia/Tokyo'))
-                document.update_at = updateat
                 print(f'更新日:{updateat}')
                 db.session.commit()
                 flash(f"ファイルが正常にアップロードされました。{status_code}")
