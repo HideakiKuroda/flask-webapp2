@@ -207,6 +207,21 @@ def select_upload():
     common_data = get_common_data()
     page = request.args.get('page', 1, type=int)
     doc_templates = DocTemplate.query.order_by(DocTemplate.id.desc()).paginate(page=page, per_page=12)
+    template_name = request.args.get('template', 'template_list')
+    if template_name == 'edited_list':
+        edited_form = EditedSearchForm()
+        context = {
+            **common_data,
+            'edited_list': edited_list,
+            'edited_form': edited_form
+        }
+        template_file = 'documents/edited_list.html'
+    elif template_name == 'template_list':
+        context = {
+            **common_data,
+            'doc_templates': doc_templates
+        }
+        template_file = 'documents/template_list.html'
     if request.method == "POST":
         if "file" not in request.files:
             flash("ファイルが選択されていません。")
@@ -242,7 +257,7 @@ def select_upload():
             else:
                 flash(f"ファイルのアップロードに失敗しました。{status_code}")
                 return redirect(request.url)
-    return render_template('documents/template_list.html', **common_data, doc_templates=doc_templates)
+    return render_template(template_file, **context)
 
 
 @document.route("/edited_list", methods=["GET", "POST"])
@@ -264,12 +279,19 @@ def edited_serch():
     searchtext = None 
     if edited_form.validate_on_submit():
         searchtext = edited_form.searchtext.data
-        searchdate = datetime.strptime(edited_form.searchdate.data, '%Y-%m')
+        searchdate_str = edited_form.searchdate.data
+        if searchdate_str:
+            try:
+                searchdate = datetime.strptime(searchdate_str, '%Y-%m')
+            except ValueError:
+                flash('無効な日付形式です。正しい形式で入力してください。例: 2024-06', 'error')
+                return redirect(request.url)
+
     elif request.method == 'GET':
         edited_form.searchtext.data = ""
         edited_form.searchdate.data = None
 
-    if searchdate is None:
+    if searchdate is None or searchdate == "":
         if searchtext == "" or searchtext is None:
             edited_list = Document.query.filter(Document.file_id.is_not(None)).order_by(Document.updated_at.desc()).paginate(page=page, per_page=12)
         else:    
@@ -291,6 +313,21 @@ def edited_serch():
             .filter(Document.updated_at >= start_date, Document.updated_at < end_date)\
             .order_by(Document.updated_at.desc()).paginate(page=page, per_page=12)
     return render_template('documents/edited_list.html', **common_data, edited_list=edited_list,edited_form=edited_form)
+
+@document.route('/<int:file_category_id>/edited_categories')
+@login_required
+def edited_categories(file_category_id):
+    common_data = get_common_data()
+    edited_form = EditedSearchForm() 
+    # カテゴリ名を取得
+    file_category = FileCategory.query.filter_by(id=file_category_id).first_or_404()
+    common_data['file_category'] = file_category
+    # paginateの記述    
+    page = request.args.get('page', 1, type=int)
+    # テンプレートの取得
+    edited_list = Document.query.filter(Document.file_id.is_not(None)).filter_by(file_category_id=file_category_id).order_by(Document.updated_at.desc()).paginate(page=page, per_page=12)
+    return render_template('documents/edited_list.html', **common_data,  edited_list=edited_list,edited_form=edited_form)
+
 
 # ダウンロードのテスト用
 @document.route('/make_response', methods=['GET', 'POST'])

@@ -22,17 +22,18 @@
 					<div class="col-sm-3 mb-2">
 						<div class="card">
 							<div class="card-body" style="max-height: 26rem;">
-								<div class="mb-2" style="text-align: center;">
+								<div class="mb-1" style="text-align: center;">
 									{% if edited.file_name.endswith('.xlsx') %}
 										<img src="{{ url_for('static', filename='/Excel/Excel-1.png')}}"  class="img-fluid card-img-top" style="max-height: 10rem; width: 50%;">
 									{% elif edited.file_name.endswith('.docx') %}
 										<img src="{{ url_for('static', filename='/Word/Word-1.png')}}"  class="img-fluid card-img-top" style="max-height: 10rem; width: 50%;">
 									{% endif %}
 								</div>						
-								<h5 class="card-title">{{ edited.name }}</h5>
-								<p class="card-text">No.:{{ edited.doc_code }}</p>
-								<p class="card-text">日付:{{ edited.updated_at | format_datetime  }}</p>
-								<p class="card-text">署名:{{ edited.signature }}</p>
+								<h5 class="card-title mb-1">{{ edited.name }}</h5>
+								<p class="card-text mb-1">No.:{{ edited.doc_code }}</p>
+								<p class="card-text mb-1">日付:{{ edited.updated_at | format_datetime  }}</p>
+								<p class="card-text mb-1">船名:{{ edited.ship.name  }}</p>
+								<p class="card-text mb-1">署名:{{ edited.signature }}</p>
 								<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createDocumentModal"
 									data-template-name="{{ edited.name }}" data-template-doc-code="{{ edited.doc_code }}" data-template-id="{{ edited.id }}">
 									再編集
@@ -72,7 +73,7 @@
 					<hr>
 					<form action="{{ url_for('document.select_upload') }}" method="POST" enctype="multipart/form-data">
 					<div class="input-group">
-						<input type="file" class="form-control" id="inputGroupFile04" name="file1">
+						<input type="file" class="form-control" id="inputGroupFile04" name="file">
 					  	<button class="btn btn-success" type="submit">
 							送信
 					  </button>
@@ -86,7 +87,7 @@
 					<ol class="list-unstyled">
 						{% for category in file_categories %}
 						<li>
-							<a href="{{ url_for('document.category_posts', file_category_id=category.id ) }}" class="text-decoration-none">
+							<a href="{{ url_for('document.edited_categories', file_category_id=category.id ) }}" class="text-decoration-none">
 								<span class="ms-2">{{ category.name }}</span>
 							</a>
 						</li>

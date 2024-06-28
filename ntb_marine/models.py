@@ -96,6 +96,7 @@ class Ship(db.Model,TimestampMixin):
     ship_attachments = db.relationship('ShipAttachment', backref = 'ship', lazy ='dynamic')
     concerneds = db.relationship('Concerned', backref = 'ship', uselist = False) 
     schedules = db.relationship('Schedule', backref = 'ship', uselist = False)  
+    documents = db.relationship('Document', backref='ship')
     def __init__(self, name, ex_name, former_name, yard, ship_no, delivered, issued_Inscert, expiry_date, gross_tonn, operat_section_id, navigation_area_id):
         self.name = name
         self.ex_name = ex_name

@@ -168,7 +168,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >Close</button>
-                            <button type="button" class="btn btn-success" data-bs-dismiss="modal" onclick="executeMethod()">アップロード</button>
+                            <button type="button" class="btn btn-success" data-bs-dismiss="modal"  onclick="postForm()">アップロード</button>
                             {{ signature_form.submit(class="btn btn-primary") }}
                         </div>
                     </form>
@@ -193,15 +193,22 @@
 				document.getElementById('{{ signature_form.template_id.id }}').value =  templateId;
 			  });
 			});
-			
+			function postForm() {
+				const form = document.createElement('form');
+				form.method = 'POST';
+				form.action = "{{ url_for('document.upload_temp_file') }}";
+				document.body.appendChild(form);
+				form.submit();
+        	}
+						
 			// JavaScriptでselect2の選択値をsignature_form.ship_idに設定
 			// function setTemplateId(value) {
 			// 	document.getElementById('{{ signature_form.template_id.id }}').value =  templateId;
 			// }
-			function fixEdgePath(path) {
-				return path.replace(/\\\\/g, '\\');
-			}
-			function executeMethod() {
+			// function fixEdgePath(path) {
+			// 	return path.replace(/\\\\/g, '\\');
+			// }
+			// function executeMethod() {
 			    // フォームからデータを取得する
 			// let temp_file_path = document.getElementById('temp_file_path').value;
     		// let document_id = document.getElementById('document_id').value;
@@ -212,10 +219,10 @@
 			// formData.append('temp_file_path', temp_file_path);
 			// formData.append('document_id', document_id);
 
-			fetch('/upload_temp_file', {
-				method: 'POST',
-				// body: formData,
-			})
+			// fetch('/upload_temp_file', {
+			// 	method: 'POST',
+			// 	// body: formData,
+			// })
 			// .then(response => response.json())
 			// .then(data => {
 			// 	if (data.message) {
@@ -228,7 +235,7 @@
 			// .catch(error => {
 			// 	console.error('Error:', error);
 			// });
-			}
+			
 			</script>
 			<!-- <head>
 				<style>
