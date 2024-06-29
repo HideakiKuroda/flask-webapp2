@@ -20,8 +20,7 @@ class SignatureForm(FlaskForm):
     signature = StringField('署名', validators=[DataRequired(message="署名を入力してください")])
     submit = SubmitField('書類作成')
 
-# class SignatureForm(FlaskForm):
-#     ship_id = IntegerField('船名',validators=[DataRequired(), NumberRange(min=1, message="船名を選択してください")])
-#     template_id = IntegerField(validators=[DataRequired(), NumberRange(min=1, message="有効なテンプレートIDがありません")])
-#     signature = StringField('署名', validators=[DataRequired(message="署名を入力してください")])
-#     submit = SubmitField('書類作成')        
+class EditedSignatureForm(FlaskForm):
+    document_id = IntegerField(validators=[DataRequired(), NumberRange(min=1, message="有効なテンプレートIDがありません")])
+    signature = StringField('署名', validators=[DataRequired(message="署名を入力してください")])
+    submit = SubmitField('書類作成')        

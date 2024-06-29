@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from ntb_marine import app_config, auth, __version__, app, ms_file_control, db
 from ntb_marine.models import DocTemplate, FileCategory, Document, Ship
 from flask_wtf import FlaskForm
-from ntb_marine.document.forms import TemplateSearchForm, SignatureForm,EditedSearchForm
+from ntb_marine.document.forms import TemplateSearchForm, SignatureForm,EditedSearchForm,EditedSignatureForm
 from io import BytesIO
 from os.path import normpath
 from datetime import datetime
@@ -169,9 +169,9 @@ def upload_temp_file():
         # 一時的なファイルを読み込む
         temp_file_path = session.get('temp_file_path')
         document_id =  session.get('document_id')
-        form_data = request.form.to_dict()  # request.formを辞書型に変換する
-        form_data["temp_file_path"] = temp_file_path
-        form_data["document_id"] = document_id
+        # form_data = request.form.to_dict()  # request.formを辞書型に変換する
+        # form_data["temp_file_path"] = temp_file_path
+        # form_data["document_id"] = document_id
         common_data = get_common_data()
         page = request.args.get('page', 1, type=int)
         doc_templates = DocTemplate.query.order_by(DocTemplate.id.desc()).paginate(page=page, per_page=12)
@@ -210,6 +210,7 @@ def select_upload():
     template_name = request.args.get('template', 'template_list')
     if template_name == 'edited_list':
         edited_form = EditedSearchForm()
+        Editedsignature_form = EditedSignatureForm()
         context = {
             **common_data,
             'edited_list': edited_list,
@@ -263,17 +264,19 @@ def select_upload():
 @document.route("/edited_list", methods=["GET", "POST"])
 @login_required
 def edited_list():
-    edited_form = EditedSearchForm()    
+    edited_form = EditedSearchForm() 
+    Editedsignature_form = EditedSignatureForm()   
     common_data = get_common_data()
     page = request.args.get('page', 1, type=int)
     edited_list = Document.query.filter(Document.file_id.is_not(None)).order_by(Document.updated_at.desc()).paginate(page=page, per_page=12)
-    return render_template('documents/edited_list.html', **common_data, edited_list=edited_list, edited_form=edited_form)
+    return render_template('documents/edited_list.html', **common_data, edited_list=edited_list, edited_form=edited_form,Editedsignature_form=Editedsignature_form)
 
 @document.route("/edited_serch", methods=["GET", "POST"])
 @login_required
 def edited_serch():
     common_data = get_common_data()
-    edited_form = EditedSearchForm()  
+    edited_form = EditedSearchForm() 
+    Editedsignature_form = EditedSignatureForm() 
     page = request.args.get('page', 1, type=int)
     searchdate = None  
     searchtext = None 
@@ -312,13 +315,14 @@ def edited_serch():
             .filter(or_(Document.doc_code.contains(searchtext), Document.name.contains(searchtext), Document.file_name.contains(searchtext)))\
             .filter(Document.updated_at >= start_date, Document.updated_at < end_date)\
             .order_by(Document.updated_at.desc()).paginate(page=page, per_page=12)
-    return render_template('documents/edited_list.html', **common_data, edited_list=edited_list,edited_form=edited_form)
+    return render_template('documents/edited_list.html', **common_data, edited_list=edited_list,edited_form=edited_form,Editedsignature_form=Editedsignature_form)
 
 @document.route('/<int:file_category_id>/edited_categories')
 @login_required
 def edited_categories(file_category_id):
     common_data = get_common_data()
-    edited_form = EditedSearchForm() 
+    edited_form = EditedSearchForm()
+    Editedsignature_form = EditedSignatureForm() 
     # カテゴリ名を取得
     file_category = FileCategory.query.filter_by(id=file_category_id).first_or_404()
     common_data['file_category'] = file_category
@@ -326,8 +330,34 @@ def edited_categories(file_category_id):
     page = request.args.get('page', 1, type=int)
     # テンプレートの取得
     edited_list = Document.query.filter(Document.file_id.is_not(None)).filter_by(file_category_id=file_category_id).order_by(Document.updated_at.desc()).paginate(page=page, per_page=12)
-    return render_template('documents/edited_list.html', **common_data,  edited_list=edited_list,edited_form=edited_form)
+    return render_template('documents/edited_list.html', **common_data,  edited_list=edited_list,edited_form=edited_form,Editedsignature_form=Editedsignature_form)
 
+@document.route('/edited_download', methods=['GET', 'POST'])
+@login_required
+def edited_download():
+    Editedsignature_form = EditedSignatureForm()
+    document = Document.query.filter_by(id=Editedsignature_form.document_id.data).first_or_404()
+    file_name = document.file_name
+    file_content, status = ms_file_control.download_file(document.file_id, auth, app_config)
+    if status != 200:
+        return status
+
+    # ファイルのMIME型を取得
+    mime_type = mimetypes.guess_type(file_name)[0] or 'application/octet-stream'
+    # send_file関数を使用してファイルをダウンロード
+    home_dir = os.path.expanduser("~")
+    download_folder = os.path.join(home_dir, 'Downloads')
+    download_file_path = os.path.join(download_folder, file_name)
+    
+    # ダウンロードしたファイル名&パスをsessionに代入
+    session['temp_file_path'] = download_file_path
+    session['document_id'] = document.id
+    return send_file(
+        file_content,
+        as_attachment = True, 
+        download_name=file_name,  
+        mimetype=mime_type,
+    )
 
 # ダウンロードのテスト用
 @document.route('/make_response', methods=['GET', 'POST'])

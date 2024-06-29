@@ -24,9 +24,9 @@
 							<div class="card-body" style="max-height: 26rem;">
 								<div class="mb-1" style="text-align: center;">
 									{% if edited.file_name.endswith('.xlsx') %}
-										<img src="{{ url_for('static', filename='/Excel/Excel-1.png')}}"  class="img-fluid card-img-top" style="max-height: 10rem; width: 50%;">
+										<img src="{{ url_for('static', filename='/Excel/Excel-2.png')}}"  class="img-fluid card-img-top" style="max-height: 10rem; width: 50%;">
 									{% elif edited.file_name.endswith('.docx') %}
-										<img src="{{ url_for('static', filename='/Word/Word-1.png')}}"  class="img-fluid card-img-top" style="max-height: 10rem; width: 50%;">
+										<img src="{{ url_for('static', filename='/Word/Word-2.png')}}"  class="img-fluid card-img-top" style="max-height: 10rem; width: 50%;">
 									{% endif %}
 								</div>						
 								<h5 class="card-title mb-1">{{ edited.name }}</h5>
@@ -35,7 +35,7 @@
 								<p class="card-text mb-1">船名:{{ edited.ship.name  }}</p>
 								<p class="card-text mb-1">署名:{{ edited.signature }}</p>
 								<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createDocumentModal"
-									data-template-name="{{ edited.name }}" data-template-doc-code="{{ edited.doc_code }}" data-template-id="{{ edited.id }}">
+									data-edited-name="{{ edited.name }}" data-edited-code="{{ edited.doc_code }}" data-edited-id="{{ edited.id }}">
 									再編集
 								</button>
 							</div>
@@ -104,9 +104,9 @@
 						<li>
 							<a href="#" class="text-decoration-none">
 								{% if recent_doc.file_name.endswith('.xlsx') %}
-								<img src="{{ url_for('static', filename='/Excel/Excel-1.png')}}"  class="img-fluid" width="90" height="50">
+								<img src="{{ url_for('static', filename='/Excel/Excel-2.png')}}"  class="img-fluid" width="90" height="50">
 								{% elif recent_doc.file_name.endswith('.docx') %}
-								<img src="{{ url_for('static', filename='/Word/Word-1.png')}}"  class="img-fluid" width="90" height="50">
+								<img src="{{ url_for('static', filename='/Word/Word-2.png')}}"  class="img-fluid" width="90" height="50">
 								{% endif %}
 								<span class="ms-2">{{ recent_doc.doc_code }}</span>
 								<span class="ms-2">{{ recent_doc.name }}</span>
@@ -151,29 +151,26 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                    <form method="post" action="{{ url_for('document.create_document') }}" >
-						{{ signature_form.hidden_tag() }}
+                    <form method="post" action="{{ url_for('document.edited_download') }}" >
+						{{ Editedsignature_form.hidden_tag() }}
                         <div class="modal-body">
                             <div class="form-group px-3">
                                 <label for="doc_code">書類のコード</label>
-								<input type="text" class="form-control" id="template-doc-code" readonly>
+								<input type="text" class="form-control" id="edited-code" readonly>
 								<label for="doc_code">書類名</label>
-								<input type="text" class="form-control" id="template-name" readonly>
-								{{ signature_form.template_id(class_="d-none") }}
+								<input type="text" class="form-control" id="edited-name" readonly>
+								{{ Editedsignature_form.document_id(class_="d-none") }}
 								<input type="file" name="temp_file_path" id="temp_file_path" style="display: none;">
-								<input type="number" name="document_id" id="document_id" style="display: none;">
+								<input type="number" name="edited_id" id="edited_id" style="display: none;">
 							</div>
                             <div class="form-group px-3 py-1">
-                                {{ render_field(signature_form.signature,class="form-control me-2", placeholder="名前を入力してください") }}
+                                {{ render_field(Editedsignature_form.signature,class="form-control me-2", placeholder="名前を入力してください") }}
 							</div>
-                            <div id="select-wrapper" class="form-group  w-auto px-3">
-    							{{ render_field(signature_form.ship_id, id="select2",class_="form-control", placeholder="船前を選択してください", style="width: 430px;") }}
-                            </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >Close</button>
-                            <button type="button" class="btn btn-success" data-bs-dismiss="modal" onclick="executeMethod()">アップロード</button>
-                            {{ signature_form.submit(class="btn btn-primary") }}
+                            <button type="button" class="btn btn-success" data-bs-dismiss="modal"  onclick="postForm()">アップロード</button>
+                            {{ Editedsignature_form.submit(class="btn btn-primary") }}
                         </div>
                     </form>
                 </div>
@@ -186,62 +183,24 @@
 			$(function() {
 			  $('#createDocumentModal').on('show.bs.modal', function(event) {
 				var button = $(event.relatedTarget); // モーダルを起動したボタン
-				var templateName = button.data('template-name'); // テンプレート名
-				var templateDocCode = button.data('template-doc-code'); // ドキュメントコード
-				var templateId = button.data('template-id'); // テンプレートID
+				var editedName = button.data('edited-name'); // テンプレート名
+				var editedCode = button.data('edited-code'); // ドキュメントコード
+				var editedId = button.data('edited-id'); // テンプレートID
 			
 				// モーダル内のフィールドにデータを設定
-				$('#template-name').val(templateName);
-				$('#template-doc-code').val(templateDocCode);
-				$('#template-id').val(templateId);
-				document.getElementById('{{ signature_form.template_id.id }}').value =  templateId;
+				$('#edited-name').val(editedName);
+				$('#edited-code').val(editedCode);
+				$('edited-id').val(editedId);
+				document.getElementById('{{ Editedsignature_form.document_id.id }}').value =  editedId;
 			  });
 			});
+			function postForm() {
+				const form = document.createElement('form');
+				form.method = 'POST';
+				form.action = "{{ url_for('document.upload_temp_file') }}";
+				document.body.appendChild(form);
+				form.submit();
+        	}
 			
-			// JavaScriptでselect2の選択値をsignature_form.ship_idに設定
-			// function setTemplateId(value) {
-			// 	document.getElementById('{{ signature_form.template_id.id }}').value =  templateId;
-			// }
-			function fixEdgePath(path) {
-				return path.replace(/\\\\/g, '\\');
-			}
-			function executeMethod() {
-			    // フォームからデータを取得する
-			let temp_file_path = document.getElementById('temp_file_path').value;
-    		let document_id = document.getElementById('document_id').value;
-			temp_file_path = fixEdgePath(temp_file_path);
-			console.log("Corrected temp_file_path:", temp_file_path);
-
-			const formData = new FormData();
-			formData.append('temp_file_path', temp_file_path);
-			formData.append('document_id', document_id);
-
-			fetch('/upload_temp_file', {
-				method: 'POST',
-				body: formData,
-			})
-			.then(response => response.json())
-			.then(data => {
-				if (data.message) {
-            		alert(data.message);  // メッセージを表示する（必要に応じて変更）
-				}
-				if (data.redirect) {
-					window.location.href = data.redirect;  // リダイレクトする
-				}
-			})
-			.catch(error => {
-				console.error('Error:', error);
-			});
-			}
 			</script>
-			<!-- <head>
-				<style>
-				  .select2-container {
-						width: 430px !important;
-					}
-					/* .modal {
-						z-index: 1050 !important;
-					}	 */
-				</style>
-			</head> -->
 {% endblock %}

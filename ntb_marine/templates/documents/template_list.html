@@ -24,9 +24,9 @@
 							<div class="card-body" style="max-height: 26rem;">
 								<div class="mb-2" style="text-align: center;">
 									{% if template.file_name.endswith('.xlsx') %}
-										<img src="{{ url_for('static', filename='/Excel/Excel-1.png')}}"  class="img-fluid card-img-top" style="max-height: 10rem; width: 50%;">
+										<img src="{{ url_for('static', filename='/Excel/Excel-3.png')}}"  class="img-fluid card-img-top" style="max-height: 10rem; width: 50%;">
 									{% elif template.file_name.endswith('.docx') %}
-										<img src="{{ url_for('static', filename='/Word/Word-1.png')}}"  class="img-fluid card-img-top" style="max-height: 10rem; width: 50%;">
+										<img src="{{ url_for('static', filename='/Word/Word-3.png')}}"  class="img-fluid card-img-top" style="max-height: 10rem; width: 50%;">
 									{% endif %}
 								</div>						
 								<h5 class="card-title">{{ template.name }}</h5>
@@ -201,50 +201,5 @@
 				form.submit();
         	}
 						
-			// JavaScriptでselect2の選択値をsignature_form.ship_idに設定
-			// function setTemplateId(value) {
-			// 	document.getElementById('{{ signature_form.template_id.id }}').value =  templateId;
-			// }
-			// function fixEdgePath(path) {
-			// 	return path.replace(/\\\\/g, '\\');
-			// }
-			// function executeMethod() {
-			    // フォームからデータを取得する
-			// let temp_file_path = document.getElementById('temp_file_path').value;
-    		// let document_id = document.getElementById('document_id').value;
-			// temp_file_path = fixEdgePath(temp_file_path);
-			// console.log("Corrected temp_file_path:", temp_file_path);
-
-			// const formData = new FormData();
-			// formData.append('temp_file_path', temp_file_path);
-			// formData.append('document_id', document_id);
-
-			// fetch('/upload_temp_file', {
-			// 	method: 'POST',
-			// 	// body: formData,
-			// })
-			// .then(response => response.json())
-			// .then(data => {
-			// 	if (data.message) {
-            // 		alert(data.message);  // メッセージを表示する（必要に応じて変更）
-			// 	}
-			// 	if (data.redirect) {
-			// 		window.location.href = data.redirect;  // リダイレクトする
-			// 	}
-			// })
-			// .catch(error => {
-			// 	console.error('Error:', error);
-			// });
-			
 			</script>
-			<!-- <head>
-				<style>
-				  .select2-container {
-						width: 430px !important;
-					}
-					/* .modal {
-						z-index: 1050 !important;
-					}	 */
-				</style>
-			</head> -->
 {% endblock %}
