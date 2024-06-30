@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="index">
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-lg-8 text-left">
+                <h1>フォルダを登録する</h1>
+                <form method="post" action="{{ url_for('file_control.register_folder') }}">
+                    <label for="folder_path">フォルダパス:</label>
+                    <input type="text" id="folder_path" name="folder_path" class="folder-input" required readonly>
+                    <button type="button" onclick="selectFolder()">フォルダを選択</button>
+                    <button type="submit">登録</button>
+                </form>
+                <a href="javascript:window.history.go(-1)">戻る</a>
+            </div>
+        </div>
+    </div>
+  </section>
+  <script>
+        async function selectFolder() {
+            try {
+                const folderInput = document.createElement('input');
+                folderInput.type = 'file';
+                folderInput.webkitdirectory = true;  // Chrome および Opera でのフォルダ選択を有効にする
+                folderInput.addEventListener('change', event => {
+                const folderPath = event.target.files[0].path;  // 選択されたフォルダのパスを取得
+                // Flask アプリケーションに選択されたフォルダのパスを送信する
+                fetch('/set-download-folder', {
+                    method: 'POST',
+                    body: JSON.stringify({ folderPath }),
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                });
+                folderInput.click();  // フォルダ選択ダイアログを表示する
+            } catch (err) {
+                console.error('Directory selection canceled', err);
+            }
+        }
+</script>
+{% endblock %}

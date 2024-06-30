@@ -1,4 +1,4 @@
-from flask import render_template, request, url_for, redirect, flash, send_file, abort,send_from_directory,make_response
+from flask import render_template, request, url_for, redirect, flash, send_file, session
 from flask import Blueprint
 from ntb_marine import app_config, auth, __version__, app
 from ntb_marine import ms_file_control 
@@ -125,4 +125,13 @@ def upload_to_folder_page(folder_id):
                 flash("ファイルのアップロードに失敗しました。")
             return redirect(url_for("logins.index"))
     return render_template("file_control/upload_to_folder.html", folder_id=folder_id)
+
+@file_control.route('/register_folder', methods=['GET', 'POST'])
+def register_folder():
+    if request.method == 'POST':
+        data = request.get_json()
+        folder_path = data.get('folderPath')
+        session['download_folder'] = folder_path  # セッションに選択されたフォルダのパスを保存
+        flash(f"フォルダの登録が出来ました:{folder_path}")
+    return render_template('file_control/register_folder.html')
 

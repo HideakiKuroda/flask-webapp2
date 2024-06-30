@@ -1,4 +1,4 @@
-from flask import render_template, request, url_for, redirect, flash, send_file, abort,make_response,send_from_directory,session
+from flask import render_template, request, url_for, redirect, flash, send_file, abort,send_from_directory,session
 from flask import Blueprint
 from flask_login import login_required, current_user
 from ntb_marine import app_config, auth, __version__, app, ms_file_control, db
@@ -166,16 +166,29 @@ def create_document():
 @document.route("/upload_temp_file", methods=["POST"])
 def upload_temp_file():
     try:
-        # 一時的なファイルを読み込む
-        temp_file_path = session.get('temp_file_path')
-        document_id =  session.get('document_id')
-        # form_data = request.form.to_dict()  # request.formを辞書型に変換する
-        # form_data["temp_file_path"] = temp_file_path
-        # form_data["document_id"] = document_id
         common_data = get_common_data()
         page = request.args.get('page', 1, type=int)
         doc_templates = DocTemplate.query.order_by(DocTemplate.id.desc()).paginate(page=page, per_page=12)
-        # signature_form = SignatureForm(form_data=form_data)
+        edited_list = Document.query.filter(Document.file_id.is_not(None)).order_by(Document.updated_at.desc()).paginate(page=page, per_page=12)
+        template_name = request.args.get('template', 'template_list')
+        if template_name == 'edited_list':
+            edited_form = EditedSearchForm()
+            Editedsignature_form = EditedSignatureForm()
+            context = {
+                **common_data,
+                'edited_list': edited_list,
+                'edited_form': edited_form,
+                'edited_signature_form':Editedsignature_form
+            }
+            template_file = 'documents/edited_list.html'
+        elif template_name == 'template_list':
+            context = {
+                **common_data,
+                'doc_templates': doc_templates
+            }
+            template_file = 'documents/template_list.html'
+        temp_file_path = session.get('temp_file_path')
+        document_id =  session.get('document_id')
         document = Document.query.filter_by(id=document_id).first_or_404()
         # print('>>>5')
         file_name = os.path.basename(temp_file_path)
@@ -189,8 +202,9 @@ def upload_temp_file():
             flash("ファイルが正常にアップロードされました。")
         else:
             flash(f"ファイルのアップロードに失敗しました。{status_code}")
+            return redirect(url_for('document.upload_temp_file', template=template_name))  # Post/Redirect/Get パターンを使用
         # print(f'ここは？ file_id:{file_id}')    
-        return render_template('documents/template_list.html', **common_data, doc_templates=doc_templates)
+        return render_template(template_file, **context)
     except Exception as e:
         print(f"Error in upload_temp_file: {e}")
         return 500
@@ -198,7 +212,6 @@ def upload_temp_file():
 def id_of_document(file_name):
     # ID_ と _ の間の数字を取得
     id_part = file_name.split("ID_")[1].split("_")[0]
-
     # 数字を整数型に変換して返す
     return int(id_part)
 # 手動でのファイルUpload
@@ -207,14 +220,17 @@ def select_upload():
     common_data = get_common_data()
     page = request.args.get('page', 1, type=int)
     doc_templates = DocTemplate.query.order_by(DocTemplate.id.desc()).paginate(page=page, per_page=12)
+    edited_list = Document.query.filter(Document.file_id.is_not(None)).order_by(Document.updated_at.desc()).paginate(page=page, per_page=12)
     template_name = request.args.get('template', 'template_list')
+    print(f"Template Name: {template_name}")
     if template_name == 'edited_list':
         edited_form = EditedSearchForm()
         Editedsignature_form = EditedSignatureForm()
         context = {
             **common_data,
             'edited_list': edited_list,
-            'edited_form': edited_form
+            'edited_form': edited_form,
+            'Editedsignature_form':Editedsignature_form
         }
         template_file = 'documents/edited_list.html'
     elif template_name == 'template_list':
@@ -255,11 +271,11 @@ def select_upload():
                 print(f'更新日:{updateat}')
                 db.session.commit()
                 flash(f"ファイルが正常にアップロードされました。{status_code}")
+                return redirect(url_for('document.select_upload', template=template_name))  # Post/Redirect/Get パターンを使用
             else:
                 flash(f"ファイルのアップロードに失敗しました。{status_code}")
                 return redirect(request.url)
     return render_template(template_file, **context)
-
 
 @document.route("/edited_list", methods=["GET", "POST"])
 @login_required
@@ -341,7 +357,6 @@ def edited_download():
     file_content, status = ms_file_control.download_file(document.file_id, auth, app_config)
     if status != 200:
         return status
-
     # ファイルのMIME型を取得
     mime_type = mimetypes.guess_type(file_name)[0] or 'application/octet-stream'
     # send_file関数を使用してファイルをダウンロード
@@ -358,27 +373,26 @@ def edited_download():
         download_name=file_name,  
         mimetype=mime_type,
     )
-
 # ダウンロードのテスト用
-@document.route('/make_response', methods=['GET', 'POST'])
-@login_required
-def make_response():
-    signature_form = SignatureForm()
-    ships = Ship.query.all()
-    signature_form.ship_id.choices = [(0, "船名を選択して下さい")] + [(ship.id, ship.name) for ship in ships]
+# @document.route('/make_response', methods=['GET', 'POST'])
+# @login_required
+# def make_response():
+#     signature_form = SignatureForm()
+#     ships = Ship.query.all()
+#     signature_form.ship_id.choices = [(0, "船名を選択して下さい")] + [(ship.id, ship.name) for ship in ships]
  
-    if request.method == 'POST':
-        template = DocTemplate.query.filter_by(id=signature_form.template_id.data).first_or_404()
+#     if request.method == 'POST':
+#         template = DocTemplate.query.filter_by(id=signature_form.template_id.data).first_or_404()
 
-        file_content, status_code = ms_file_control.download_file(template.file_id, auth, app_config)
-        if status_code == 200:
-            mime_type = mimetypes.guess_type(template.file_name)[0] or 'application/octet-stream'
-            file_extension = template.file_name.split('.')[-1]
-            file_name = f"ID_{datetime.now().strftime('%Y%m%d')}_{template.doc_code}.{file_extension}"
+#         file_content, status_code = ms_file_control.download_file(template.file_id, auth, app_config)
+#         if status_code == 200:
+#             mime_type = mimetypes.guess_type(template.file_name)[0] or 'application/octet-stream'
+#             file_extension = template.file_name.split('.')[-1]
+#             file_name = f"ID_{datetime.now().strftime('%Y%m%d')}_{template.doc_code}.{file_extension}"
             
-    return send_file(
-        file_content,
-        mimetype=mime_type,
-        as_attachment=True,
-        download_name=file_name
-    )
+#     return send_file(
+#         file_content,
+#         mimetype=mime_type,
+#         as_attachment=True,
+#         download_name=file_name
+#     )

@@ -40,12 +40,18 @@ auth = identity.web.Auth(
     client_credential=app.config["CLIENT_SECRET"],
 )
 
-# basedir = os.path.abspath(os.path.dirname(__file__))  
-# # data.sqlite という名前のデータベースを作成します。
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite')
+# アプリケーションのルートディレクトリを取得
+basedir = os.path.abspath(os.path.dirname(__file__))
+# データベースの相対パスを設定
+database_path = os.path.join(basedir, 'instance', 'ntb.db')
+sqlPath = f"sqlite:///{database_path}"
+print(f'SQLite path1: {sqlPath}')
 # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False #データベースの変更履歴は不要
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+sqlPath = os.getenv("SQLALCHEMY_DATABASE_URI")
+
+print(f'SQLite path2: {sqlPath}')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False #データベースの変更履歴は不要
 db = SQLAlchemy(app)
 #"Migrate" の設定
 Migrate(app, db)

@@ -71,7 +71,7 @@
 				<div class="p-2 mb-2">
 					<h5 class="fst-italic">UPLOAD FILE<span class="ms-2 fs-6">手動でアップする</span></h5>
 					<hr>
-					<form action="{{ url_for('document.select_upload') }}" method="POST" enctype="multipart/form-data">
+					<form id="uploadFormMain" action="{{ url_for('document.select_upload', template='edited_list') }}" method="POST" enctype="multipart/form-data">
 					<div class="input-group">
 						<input type="file" class="form-control" id="inputGroupFile04" name="file">
 					  	<button class="btn btn-success" type="submit">
@@ -197,10 +197,22 @@
 			function postForm() {
 				const form = document.createElement('form');
 				form.method = 'POST';
-				form.action = "{{ url_for('document.upload_temp_file') }}";
+				form.action = "{{ url_for('document.upload_temp_file', template='edited_list') }}";
 				document.body.appendChild(form);
 				form.submit();
         	}
-			
+			document.addEventListener("DOMContentLoaded", function() {
+				const fileInput = document.getElementById('inputGroupFile04');
+				
+				fileInput.addEventListener('change', function() {
+				if (fileInput.files.length > 0) {
+					// 確認メッセージを表示
+					const confirmUpload = confirm('ファイルを送信しますか？');
+					if (confirmUpload) {
+					document.getElementById('uploadFormMain').submit();
+					}
+				}
+				});
+			});
 			</script>
 {% endblock %}
