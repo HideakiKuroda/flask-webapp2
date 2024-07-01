@@ -67,7 +67,7 @@
 				<div class="p-2 mb-2">
 					<h5 class="fst-italic">UPLOAD FILE<span class="ms-2 fs-6">手動でアップする</span></h5>
 					<hr>
-					<form action="{{ url_for('document.select_upload') }}" method="POST" enctype="multipart/form-data">
+					<form id="uploadFormMain" action="{{ url_for('document.select_upload', template='template_list') }}" method="POST" enctype="multipart/form-data">
 					<div class="input-group">
 						<input type="file" class="form-control" id="inputGroupFile04" name="file">
 					  	<button class="btn btn-success" type="submit">
@@ -168,10 +168,16 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >Close</button>
-                            <button type="button" class="btn btn-success" data-bs-dismiss="modal"  onclick="postForm()">アップロード</button>
+                            <!-- <button type="button" class="btn btn-success" data-bs-dismiss="modal"  onclick="postForm()">アップロード</button> -->
                             {{ signature_form.submit(class="btn btn-primary") }}
                         </div>
                     </form>
+					<div class="p-2 mx-5 mb-2">
+						<form id="uploadForm" action="{{ url_for('document.select_upload', template='template_list') }}" method="POST" enctype="multipart/form-data">
+							<input type="file" multiple class="form-control" id="inputGroupFile05" name="file" style="display:none">
+							<button type="button" class="btn btn-success" data-bs-dismiss="modal" id="fileSelect">ファイルをUploadする</button>
+						</form>
+					</div>
                 </div>
             </div>
         </div>
@@ -193,13 +199,23 @@
 				document.getElementById('{{ signature_form.template_id.id }}').value =  templateId;
 			  });
 			});
-			function postForm() {
-				const form = document.createElement('form');
-				form.method = 'POST';
-				form.action = "{{ url_for('document.upload_temp_file') }}";
-				document.body.appendChild(form);
-				form.submit();
-        	}
-						
+			const fileSelect = document.getElementById("fileSelect");
+			const fileElem = document.getElementById("inputGroupFile05");
+			const uploadForm = document.getElementById("uploadForm");
+
+			fileSelect.addEventListener("click", (e) => {
+				if (fileElem) {
+					fileElem.click();
+				}
+			}, false);
+
+			fileElem.addEventListener("change", (e) => {
+				if (fileElem.files.length > 0) {
+					const confirmUpload = confirm("選択したファイルをアップロードしますか？");
+					if (confirmUpload) {
+						uploadForm.submit(); // 確認ダイアログで「OK」をクリックしたらフォームを送信
+					}
+				}
+			});						
 			</script>
 {% endblock %}

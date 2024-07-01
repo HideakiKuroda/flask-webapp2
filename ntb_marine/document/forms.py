@@ -23,4 +23,4 @@ class SignatureForm(FlaskForm):
 class EditedSignatureForm(FlaskForm):
     document_id = IntegerField(validators=[DataRequired(), NumberRange(min=1, message="有効なテンプレートIDがありません")])
     signature = StringField('署名', validators=[DataRequired(message="署名を入力してください")])
-    submit = SubmitField('書類作成')        
+    submit = SubmitField('文書編集')        

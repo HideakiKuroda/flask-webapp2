@@ -141,14 +141,7 @@ def create_document():
                 file_name = f"ID_{document.id}_{document.ship_id}_{datetime.now().strftime('%Y%m%d')}_{template.doc_code}.{file_extension}"
                 document.file_name = file_name  # Documentオブジェクトのfile_nameを更新
                 db.session.commit()  # Documentオブジェクトを更新してコミット
-                # PCのダウンロードフォルダとファイル名をつなげてdownload_file_path　アップロード時に必要
-                home_dir = os.path.expanduser("~")
-                download_folder = os.path.join(home_dir, 'Downloads')
-                download_file_path = os.path.join(download_folder, file_name)
-                
-                # ダウンロードしたファイル名&パスをsessionに代入
-                session['temp_file_path'] = download_file_path
-                session['document_id'] = document.id
+                session['file_name'] = file_name
                 return send_file(
                     file_content,
                     mimetype=mime_type,

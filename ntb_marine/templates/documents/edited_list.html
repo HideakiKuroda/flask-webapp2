@@ -146,7 +146,7 @@
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="createDocumentModalLabel">書類作成</h5>
+                        <h5 class="modal-title" id="createDocumentModalLabel">文書編集</h5>
                         <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -169,11 +169,17 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >Close</button>
-                            <button type="button" class="btn btn-success" data-bs-dismiss="modal"  onclick="postForm()">アップロード</button>
+                            <!-- <button type="button" class="btn btn-success" data-bs-dismiss="modal"  onclick="postForm()">アップロード</button> -->
                             {{ Editedsignature_form.submit(class="btn btn-primary") }}
                         </div>
                     </form>
-                </div>
+					<div class="p-2 mx-5">
+						<form id="uploadFormModal" action="{{ url_for('document.select_upload', template='edited_list') }}" method="POST" enctype="multipart/form-data">
+							<input type="file" multiple class="form-control" id="inputGroupFile05" name="file" style="display:none">
+							<button type="button" class="btn btn-success" data-bs-dismiss="modal" id="fileSelect">ファイルをUploadする</button>
+					  </form>
+					</div>
+				</div>	
             </div>
         </div>
 		<script>
@@ -194,25 +200,23 @@
 				document.getElementById('{{ Editedsignature_form.document_id.id }}').value =  editedId;
 			  });
 			});
-			function postForm() {
-				const form = document.createElement('form');
-				form.method = 'POST';
-				form.action = "{{ url_for('document.upload_temp_file', template='edited_list') }}";
-				document.body.appendChild(form);
-				form.submit();
-        	}
-			document.addEventListener("DOMContentLoaded", function() {
-				const fileInput = document.getElementById('inputGroupFile04');
-				
-				fileInput.addEventListener('change', function() {
-				if (fileInput.files.length > 0) {
-					// 確認メッセージを表示
-					const confirmUpload = confirm('ファイルを送信しますか？');
+			const fileSelect = document.getElementById("fileSelect");
+			const fileElem = document.getElementById("inputGroupFile05");
+			const uploadForm = document.getElementById("uploadFormModal");
+
+			fileSelect.addEventListener("click", (e) => {
+				if (fileElem) {
+					fileElem.click();
+				}
+			}, false);
+
+			fileElem.addEventListener("change", (e) => {
+				if (fileElem.files.length > 0) {
+					const confirmUpload = confirm("選択したファイルをアップロードしますか？");
 					if (confirmUpload) {
-					document.getElementById('uploadFormMain').submit();
+						uploadForm.submit(); // 確認ダイアログで「OK」をクリックしたらフォームを送信
 					}
 				}
-				});
-			});
+			});						
 			</script>
 {% endblock %}
